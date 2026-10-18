@@ -2,291 +2,586 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#101714">
-  <title>Sebastião Porteiro | Masmorra-Sede</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#101714">
+<title>Sebastião Porteiro | Masmorra-Sede</title>
 
-  <style>
-    * { box-sizing: border-box; }
+<style>
+  * { box-sizing: border-box; }
 
-    body {
-      margin: 0;
-      min-height: 100dvh;
-      background: #101714;
-      color: #f4eddf;
-      font-family: Arial, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 24px;
-    }
+  body {
+    margin: 0;
+    min-height: 100dvh;
+    background: #101714;
+    color: #f4eddf;
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 24px;
+  }
 
-    main {
-      width: 100%;
-      max-width: 420px;
-      padding: 36px 24px;
-      background: #19231e;
-      border: 1px solid #75603b;
-      border-radius: 24px;
-      text-align: center;
-    }
+  main {
+    width: 100%;
+    max-width: 420px;
+    background: #19231e;
+    border: 1px solid #75603b;
+    border-radius: 24px;
+    text-align: center;
+    padding: 36px 24px;
+  }
 
-    .symbol {
-      font-size: 48px;
-      margin-bottom: 16px;
-    }
+  .symbol {
+    font-size: 48px;
+    margin-bottom: 16px;
+  }
 
-    .eyebrow {
-      color: #c5a570;
-      font-size: 11px;
-      letter-spacing: 3px;
-      text-transform: uppercase;
-    }
+  .eyebrow {
+    color: #c5a570;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+  }
 
-    h1 {
-      font-family: Georgia, serif;
-      font-size: 31px;
-      margin: 16px 0 8px;
-      font-weight: normal;
-    }
+  h1 {
+    font-family: Georgia, serif;
+    font-size: 31px;
+    line-height: 1.12;
+    font-weight: normal;
+    margin: 16px 0 8px;
+  }
 
-    .subtitle {
-      color: #aab9ae;
-      font-size: 14px;
-      margin-bottom: 32px;
-    }
+  .subtitle {
+    color: #aab9ae;
+    font-size: 14px;
+    margin-bottom: 26px;
+  }
 
-    .status {
-      background: #101714;
-      border: 1px solid #34463a;
-      padding: 18px;
-      border-radius: 12px;
-      font-size: 14px;
-      margin-bottom: 24px;
-    }
+  .connection {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 9px;
+    font-size: 12px;
+    color: #aab9ae;
+    margin-bottom: 20px;
+  }
 
-    .meter {
-      height: 9px;
-      background: #344139;
-      border-radius: 20px;
-      margin: 22px 0;
-      overflow: hidden;
-    }
+  .dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: #987d42;
+  }
 
-    #volume {
-      height: 100%;
-      width: 0%;
-      background: #b99a61;
-      transition: width 80ms linear;
-    }
+  .dot.online { background: #72be89; }
+  .dot.offline { background: #c46a65; }
 
-    button {
-      display: block;
-      width: 100%;
-      padding: 17px;
-      margin-top: 12px;
-      border: none;
-      border-radius: 12px;
-      font-weight: bold;
-      font-size: 15px;
-      cursor: pointer;
-    }
+  .status {
+    background: #101714;
+    border: 1px solid #34463a;
+    padding: 20px 14px;
+    border-radius: 12px;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 24px;
+    min-height: 78px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
 
-    #start {
-      background: #b99a61;
-      color: #101714;
-    }
+  .meter {
+    height: 9px;
+    background: #344139;
+    border-radius: 20px;
+    margin: 22px 0 25px;
+    overflow: hidden;
+  }
 
-    #stop {
-      background: #344139;
-      color: white;
-    }
+  #volume {
+    height: 100%;
+    width: 0%;
+    background: #b99a61;
+    transition: width 80ms linear;
+  }
 
-    button:disabled {
-      opacity: .4;
-      cursor: not-allowed;
-    }
+  button {
+    display: block;
+    width: 100%;
+    padding: 17px;
+    margin-top: 12px;
+    border: none;
+    border-radius: 12px;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+  }
 
-    footer {
-      margin-top: 32px;
-      color: #8a9c8f;
-      font-size: 11px;
-      letter-spacing: 1px;
-    }
-  </style>
+  button:disabled {
+    opacity: .4;
+    cursor: not-allowed;
+  }
+
+  #start {
+    background: #b99a61;
+    color: #101714;
+  }
+
+  #stop {
+    background: #344139;
+    color: #f4eddf;
+  }
+
+  .details {
+    margin-top: 25px;
+    padding: 14px;
+    border-top: 1px solid #344139;
+    text-align: left;
+    color: #aab9ae;
+    font-size: 12px;
+    line-height: 1.7;
+  }
+
+  .details strong { color: #c5a570; }
+
+  #diagnostic {
+    overflow-wrap: anywhere;
+  }
+
+  footer {
+    margin-top: 28px;
+    color: #8a9c8f;
+    font-size: 11px;
+    letter-spacing: 1px;
+  }
+
+  audio { display: none; }
+</style>
 </head>
 
 <body>
-  <main>
-    <div class="symbol">🏰</div>
-    <div class="eyebrow">Masmorra-Sede</div>
+<main>
 
-    <h1>Sebastião Porteiro</h1>
-    <p class="subtitle">
-      Terminal experimental de interfonia
-    </p>
+  <div class="symbol">🏰</div>
+  <div class="eyebrow">Masmorra-Sede</div>
 
-    <div class="status" id="status" role="status">
-      Microfone aguardando ativação
-    </div>
+  <h1>Sebastião<br>Porteiro</h1>
 
-    <div class="meter">
-      <div id="volume"></div>
-    </div>
+  <p class="subtitle">
+    Terminal experimental de interfonia
+  </p>
 
-    <button id="start">
-      🎙️ Ativar microfone
-    </button>
+  <div class="connection">
+    <span class="dot" id="connectionDot"></span>
+    <span id="connectionText">Conectando à AWS...</span>
+  </div>
 
-    <button id="stop" disabled>
-      Encerrar teste
-    </button>
+  <div class="status" id="status" role="status">
+    Preparando central de comunicação...
+  </div>
 
-    <footer>
-      SEBASTIÃO SYSTEMS • LABORATÓRIO 01
-    </footer>
-  </main>
+  <div class="meter">
+    <div id="volume"></div>
+  </div>
 
-  <script>
-    let stream = null;
-    let audioContext = null;
-    let animationId = null;
+  <button id="start">
+    🎙️ Preparar microfone
+  </button>
 
-    const status = document.getElementById('status');
-    const volume = document.getElementById('volume');
-    const start = document.getElementById('start');
-    const stop = document.getElementById('stop');
+  <button id="stop" disabled>
+    Encerrar teste
+  </button>
 
-    start.onclick = async () => {
-      start.disabled = true;
+  <audio id="remoteAudio" autoplay playsinline></audio>
 
-      try {
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true
-          },
-          video: false
-        });
+  <div class="details">
+    <div><strong>Central:</strong> Masmorra Labs</div>
+    <div><strong>Áudio:</strong> <span id="audioStatus">Aguardando</span></div>
+    <div><strong>WebRTC:</strong> <span id="rtcStatus">Inativo</span></div>
+    <div><strong>Último evento:</strong> <span id="diagnostic">Nenhum</span></div>
+  </div>
 
-        audioContext = new AudioContext();
-        await audioContext.resume();
+  <footer>
+    SEBASTIÃO SYSTEMS • LABORATÓRIO 02
+  </footer>
 
-        const source =
-          audioContext.createMediaStreamSource(stream);
+</main>
 
-        const analyser = audioContext.createAnalyser();
-        analyser.fftSize = 1024;
-        source.connect(analyser);
+<script>
+const SOCKET_URL =
+  'wss://b0z9d37i01.execute-api.us-east-1.amazonaws.com/dev';
 
-        const data = new Uint8Array(analyser.fftSize);
+const ICE_CONFIG = {
+  iceServers: [
+    {
+      urls: 'stun:stun.l.google.com:19302'
+    }
+  ]
+};
 
-        function updateMeter() {
-          analyser.getByteTimeDomainData(data);
+const statusBox = document.getElementById('status');
+const connectionDot = document.getElementById('connectionDot');
+const connectionText = document.getElementById('connectionText');
+const audioStatus = document.getElementById('audioStatus');
+const rtcStatus = document.getElementById('rtcStatus');
+const diagnostic = document.getElementById('diagnostic');
+const volume = document.getElementById('volume');
+const start = document.getElementById('start');
+const stop = document.getElementById('stop');
+const remoteAudio = document.getElementById('remoteAudio');
 
-          let sum = 0;
+let socket = null;
+let stream = null;
+let audioContext = null;
+let analyser = null;
+let animationId = null;
+let peer = null;
+let activeSessionId = null;
 
-          for (const sample of data) {
-            const value = (sample - 128) / 128;
-            sum += value * value;
-          }
+function setStatus(message) {
+  statusBox.textContent = message;
+}
 
-          const rms = Math.sqrt(sum / data.length);
-          volume.style.width =
-            Math.min(100, rms * 350) + '%';
+function setEvent(message) {
+  diagnostic.textContent = message;
+  console.log('[Sebastiao]', message);
+}
 
-          animationId = requestAnimationFrame(updateMeter);
-        }
+function sendMessage(message) {
+  if (!socket || socket.readyState !== WebSocket.OPEN) {
+    throw new Error('WebSocket desconectado');
+  }
 
-        updateMeter();
+  socket.send(JSON.stringify(message));
+}
 
-        status.textContent =
-          'Microfone ativo. Fale para testar o áudio.';
+function connectAWS() {
+  connectionText.textContent = 'Conectando à AWS...';
 
-        stop.disabled = false;
+  socket = new WebSocket(SOCKET_URL);
 
-      } catch (error) {
-        console.error(error);
+  socket.onopen = () => {
+    connectionDot.className = 'dot online';
+    connectionText.textContent = 'Central AWS conectada';
 
-        status.textContent =
-          'Não foi possível acessar o microfone: ' +
-          error.message;
+    setStatus(
+      stream
+        ? 'Microfone preparado. Aguardando chamada.'
+        : 'Central conectada. Prepare o microfone.'
+    );
 
-        start.disabled = false;
-      }
-    };
+    setEvent('WebSocket conectado');
 
-    stop.onclick = async () => {
-      if (animationId !== null) {
-        cancelAnimationFrame(animationId);
-        animationId = null;
-      }
+    sendMessage({
+      action: 'teste',
+      origem: 'celular',
+      mensagem: 'Terminal da portaria conectado!'
+    });
+  };
 
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
-        stream = null;
-      }
+  socket.onmessage = async (event) => {
+    let message;
 
-      if (audioContext) {
-        await audioContext.close();
-        audioContext = null;
-      }
-
-      volume.style.width = '0%';
-      status.textContent = 'Microfone desativado';
-
-      start.disabled = false;
-      stop.disabled = true;
-    };
-    // Canal de sinalizacao da Masmorra-Sede
-    const SOCKET_URL =
-      'wss://b0z9d37i01.execute-api.us-east-1.amazonaws.com/dev';
-
-    let canalSebastiao = null;
-
-    function conectarAWS() {
-      status.textContent = 'Conectando a central da Masmorra...';
-
-      canalSebastiao = new WebSocket(SOCKET_URL);
-
-      canalSebastiao.onopen = () => {
-        status.textContent =
-          'Central AWS conectada. Microfone disponivel.';
-
-        canalSebastiao.send(JSON.stringify({
-          action: 'teste',
-          origem: 'celular',
-          mensagem: 'Terminal da portaria conectado!'
-        }));
-      };
-
-      canalSebastiao.onmessage = (event) => {
-        try {
-          const resposta = JSON.parse(event.data);
-
-          console.log('Sebastiao:', resposta);
-
-          status.textContent =
-            resposta.mensagem ?? 'Mensagem recebida da central.';
-        } catch {
-          console.log('Mensagem:', event.data);
-        }
-      };
-
-      canalSebastiao.onerror = () => {
-        status.textContent =
-          'Falha na comunicacao com a central AWS.';
-      };
-
-      canalSebastiao.onclose = () => {
-        status.textContent =
-          'Central desconectada. Atualize para reconectar.';
-      };
+    try {
+      message = JSON.parse(event.data);
+    } catch {
+      setEvent('Mensagem recebida em formato desconhecido');
+      return;
     }
 
-    conectarAWS();
+    console.log('[AWS]', message);
 
-  </script>
+    if (message.action === 'webrtc_offer') {
+      await handleOffer(message);
+      return;
+    }
+
+    if (message.action === 'chamada_teste') {
+      setStatus(message.mensagem);
+      setEvent('Chamada experimental recebida');
+      return;
+    }
+
+    if (message.action === 'resposta') {
+      setStatus(message.mensagem);
+      setEvent('Resposta da AWS recebida');
+      return;
+    }
+
+    setEvent('Evento: ' + (message.action || 'desconhecido'));
+  };
+
+  socket.onerror = () => {
+    setEvent('Erro na conexão WebSocket');
+  };
+
+  socket.onclose = () => {
+    connectionDot.className = 'dot offline';
+    connectionText.textContent = 'Central desconectada';
+
+    closePeer();
+
+    setStatus('Conexão encerrada. Atualize a página.');
+    setEvent('WebSocket desconectado');
+  };
+}
+
+function updateMeter() {
+  if (!analyser) return;
+
+  const data = new Uint8Array(analyser.fftSize);
+  analyser.getByteTimeDomainData(data);
+
+  let sum = 0;
+
+  for (const sample of data) {
+    const value = (sample - 128) / 128;
+    sum += value * value;
+  }
+
+  const rms = Math.sqrt(sum / data.length);
+
+  volume.style.width =
+    Math.min(100, rms * 350) + '%';
+
+  animationId = requestAnimationFrame(updateMeter);
+}
+
+async function prepareMicrophone() {
+  if (stream) return;
+
+  stream = await navigator.mediaDevices.getUserMedia({
+    audio: {
+      echoCancellation: true,
+      noiseSuppression: true,
+      autoGainControl: true
+    },
+    video: false
+  });
+
+  audioContext = new AudioContext();
+  await audioContext.resume();
+
+  const source =
+    audioContext.createMediaStreamSource(stream);
+
+  analyser = audioContext.createAnalyser();
+  analyser.fftSize = 1024;
+
+  source.connect(analyser);
+
+  updateMeter();
+
+  audioStatus.textContent = 'Microfone preparado';
+  setStatus('Microfone preparado. Aguardando chamada.');
+  setEvent('Captura de áudio funcionando');
+}
+
+async function waitForIce(connection, timeoutMs = 3500) {
+  if (connection.iceGatheringState === 'complete') return;
+
+  await new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      cleanup();
+      reject(new Error('Tempo limite da coleta ICE'));
+    }, timeoutMs);
+
+    function check() {
+      if (connection.iceGatheringState === 'complete') {
+        cleanup();
+        resolve();
+      }
+    }
+
+    function cleanup() {
+      clearTimeout(timeout);
+      connection.removeEventListener('icegatheringstatechange', check);
+    }
+
+    connection.addEventListener('icegatheringstatechange', check);
+    check();
+  });
+}
+
+function closePeer() {
+  if (peer) {
+    peer.close();
+    peer = null;
+  }
+
+  activeSessionId = null;
+  remoteAudio.srcObject = null;
+  rtcStatus.textContent = 'Inativo';
+}
+
+async function handleOffer(message) {
+  const sessionId = message.sessionId;
+  const offerSdp =
+    message.sdp || message.offer?.value;
+
+  if (!sessionId || typeof offerSdp !== 'string') {
+    setEvent('Proposta SDP inválida');
+    return;
+  }
+
+  if (!stream) {
+    setStatus('Prepare o microfone antes de receber chamadas.');
+    setEvent('Chamada recebida sem microfone preparado');
+
+    try {
+      sendMessage({
+        action: 'webrtc_error',
+        sessionId,
+        error: 'MICROPHONE_NOT_READY'
+      });
+    } catch (error) {
+      console.error(error);
+    }
+
+    return;
+  }
+
+  closePeer();
+
+  let newPeer = null;
+
+  try {
+    setStatus('Negociando comunicação WebRTC...');
+    rtcStatus.textContent = 'Negociando';
+    setEvent('Proposta SDP recebida');
+
+    newPeer = new RTCPeerConnection(ICE_CONFIG);
+    peer = newPeer;
+    activeSessionId = sessionId;
+
+    newPeer.ontrack = async (event) => {
+      if (event.streams?.[0]) {
+        remoteAudio.srcObject = event.streams[0];
+      } else {
+        remoteAudio.srcObject =
+          new MediaStream([event.track]);
+      }
+
+      try {
+        await remoteAudio.play();
+      } catch (error) {
+        setEvent('Áudio remoto exige interação com a página');
+      }
+    };
+
+    newPeer.onconnectionstatechange = () => {
+      if (peer !== newPeer) return;
+
+      rtcStatus.textContent = newPeer.connectionState;
+
+      if (newPeer.connectionState === 'connected') {
+        setStatus('Chamada de áudio conectada.');
+        setEvent('WebRTC conectado');
+      }
+
+      if (newPeer.connectionState === 'failed') {
+        setStatus('Falha na conexão de áudio.');
+        setEvent('WebRTC falhou');
+      }
+    };
+
+    for (const track of stream.getAudioTracks()) {
+      newPeer.addTrack(track, stream);
+    }
+
+    await newPeer.setRemoteDescription({
+      type: 'offer',
+      sdp: offerSdp
+    });
+
+    const answer = await newPeer.createAnswer();
+
+    await newPeer.setLocalDescription(answer);
+    await waitForIce(newPeer);
+
+    if (!newPeer.localDescription?.sdp) {
+      throw new Error('Resposta SDP indisponível');
+    }
+
+    sendMessage({
+      action: 'webrtc_answer',
+      sessionId,
+      sdp: newPeer.localDescription.sdp
+    });
+
+    setEvent('Resposta SDP enviada à AWS');
+    setStatus('Resposta enviada. Aguardando conexão de áudio.');
+
+  } catch (error) {
+    console.error('[WebRTC]', error);
+
+    setStatus('Não foi possível negociar a chamada.');
+    setEvent('Falha WebRTC: ' + error.message);
+
+    try {
+      sendMessage({
+        action: 'webrtc_error',
+        sessionId,
+        error: 'NEGOTIATION_FAILED'
+      });
+    } catch (sendError) {
+      console.error(sendError);
+    }
+
+    closePeer();
+  }
+}
+
+start.onclick = async () => {
+  start.disabled = true;
+
+  try {
+    await prepareMicrophone();
+    stop.disabled = false;
+
+  } catch (error) {
+    console.error(error);
+
+    setStatus('Não foi possível acessar o microfone.');
+    setEvent(error.message);
+
+    start.disabled = false;
+  }
+};
+
+stop.onclick = async () => {
+  closePeer();
+
+  if (animationId !== null) {
+    cancelAnimationFrame(animationId);
+    animationId = null;
+  }
+
+  analyser = null;
+
+  if (stream) {
+    stream.getTracks().forEach(track => track.stop());
+    stream = null;
+  }
+
+  if (audioContext) {
+    await audioContext.close();
+    audioContext = null;
+  }
+
+  volume.style.width = '0%';
+
+  audioStatus.textContent = 'Microfone desativado';
+  setStatus('Teste encerrado.');
+  setEvent('Captura de áudio encerrada');
+
+  start.disabled = false;
+  stop.disabled = true;
+};
+
+connectAWS();
+</script>
 </body>
 </html>
