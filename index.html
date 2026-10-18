@@ -1,0 +1,244 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101714">
+  <title>Sebastião Porteiro | Masmorra-Sede</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100dvh;
+      background: #101714;
+      color: #f4eddf;
+      font-family: Arial, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    main {
+      width: 100%;
+      max-width: 420px;
+      padding: 36px 24px;
+      background: #19231e;
+      border: 1px solid #75603b;
+      border-radius: 24px;
+      text-align: center;
+    }
+
+    .symbol {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .eyebrow {
+      color: #c5a570;
+      font-size: 11px;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-family: Georgia, serif;
+      font-size: 31px;
+      margin: 16px 0 8px;
+      font-weight: normal;
+    }
+
+    .subtitle {
+      color: #aab9ae;
+      font-size: 14px;
+      margin-bottom: 32px;
+    }
+
+    .status {
+      background: #101714;
+      border: 1px solid #34463a;
+      padding: 18px;
+      border-radius: 12px;
+      font-size: 14px;
+      margin-bottom: 24px;
+    }
+
+    .meter {
+      height: 9px;
+      background: #344139;
+      border-radius: 20px;
+      margin: 22px 0;
+      overflow: hidden;
+    }
+
+    #volume {
+      height: 100%;
+      width: 0%;
+      background: #b99a61;
+      transition: width 80ms linear;
+    }
+
+    button {
+      display: block;
+      width: 100%;
+      padding: 17px;
+      margin-top: 12px;
+      border: none;
+      border-radius: 12px;
+      font-weight: bold;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    #start {
+      background: #b99a61;
+      color: #101714;
+    }
+
+    #stop {
+      background: #344139;
+      color: white;
+    }
+
+    button:disabled {
+      opacity: .4;
+      cursor: not-allowed;
+    }
+
+    footer {
+      margin-top: 32px;
+      color: #8a9c8f;
+      font-size: 11px;
+      letter-spacing: 1px;
+    }
+  </style>
+</head>
+
+<body>
+  <main>
+    <div class="symbol">🏰</div>
+    <div class="eyebrow">Masmorra-Sede</div>
+
+    <h1>Sebastião Porteiro</h1>
+    <p class="subtitle">
+      Terminal experimental de interfonia
+    </p>
+
+    <div class="status" id="status" role="status">
+      Microfone aguardando ativação
+    </div>
+
+    <div class="meter">
+      <div id="volume"></div>
+    </div>
+
+    <button id="start">
+      🎙️ Ativar microfone
+    </button>
+
+    <button id="stop" disabled>
+      Encerrar teste
+    </button>
+
+    <footer>
+      SEBASTIÃO SYSTEMS • LABORATÓRIO 01
+    </footer>
+  </main>
+
+  <script>
+    let stream = null;
+    let audioContext = null;
+    let animationId = null;
+
+    const status = document.getElementById('status');
+    const volume = document.getElementById('volume');
+    const start = document.getElementById('start');
+    const stop = document.getElementById('stop');
+
+    start.onclick = async () => {
+      start.disabled = true;
+
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true
+          },
+          video: false
+        });
+
+        audioContext = new AudioContext();
+        await audioContext.resume();
+
+        const source =
+          audioContext.createMediaStreamSource(stream);
+
+        const analyser = audioContext.createAnalyser();
+        analyser.fftSize = 1024;
+        source.connect(analyser);
+
+        const data = new Uint8Array(analyser.fftSize);
+
+        function updateMeter() {
+          analyser.getByteTimeDomainData(data);
+
+          let sum = 0;
+
+          for (const sample of data) {
+            const value = (sample - 128) / 128;
+            sum += value * value;
+          }
+
+          const rms = Math.sqrt(sum / data.length);
+          volume.style.width =
+            Math.min(100, rms * 350) + '%';
+
+          animationId = requestAnimationFrame(updateMeter);
+        }
+
+        updateMeter();
+
+        status.textContent =
+          'Microfone ativo. Fale para testar o áudio.';
+
+        stop.disabled = false;
+
+      } catch (error) {
+        console.error(error);
+
+        status.textContent =
+          'Não foi possível acessar o microfone: ' +
+          error.message;
+
+        start.disabled = false;
+      }
+    };
+
+    stop.onclick = async () => {
+      if (animationId !== null) {
+        cancelAnimationFrame(animationId);
+        animationId = null;
+      }
+
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
+        stream = null;
+      }
+
+      if (audioContext) {
+        await audioContext.close();
+        audioContext = null;
+      }
+
+      volume.style.width = '0%';
+      status.textContent = 'Microfone desativado';
+
+      start.disabled = false;
+      stop.disabled = true;
+    };
+  </script>
+</body>
+</html>
