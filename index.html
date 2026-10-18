@@ -239,6 +239,54 @@
       start.disabled = false;
       stop.disabled = true;
     };
+    // Canal de sinalizacao da Masmorra-Sede
+    const SOCKET_URL =
+      'wss://b0z9d37i01.execute-api.us-east-1.amazonaws.com/dev';
+
+    let canalSebastiao = null;
+
+    function conectarAWS() {
+      status.textContent = 'Conectando a central da Masmorra...';
+
+      canalSebastiao = new WebSocket(SOCKET_URL);
+
+      canalSebastiao.onopen = () => {
+        status.textContent =
+          'Central AWS conectada. Microfone disponivel.';
+
+        canalSebastiao.send(JSON.stringify({
+          action: 'teste',
+          origem: 'celular',
+          mensagem: 'Terminal da portaria conectado!'
+        }));
+      };
+
+      canalSebastiao.onmessage = (event) => {
+        try {
+          const resposta = JSON.parse(event.data);
+
+          console.log('Sebastiao:', resposta);
+
+          status.textContent =
+            resposta.mensagem ?? 'Mensagem recebida da central.';
+        } catch {
+          console.log('Mensagem:', event.data);
+        }
+      };
+
+      canalSebastiao.onerror = () => {
+        status.textContent =
+          'Falha na comunicacao com a central AWS.';
+      };
+
+      canalSebastiao.onclose = () => {
+        status.textContent =
+          'Central desconectada. Atualize para reconectar.';
+      };
+    }
+
+    conectarAWS();
+
   </script>
 </body>
 </html>
