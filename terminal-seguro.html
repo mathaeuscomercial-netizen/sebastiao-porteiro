@@ -136,7 +136,7 @@ audio { display: none; }
   <p class="descricao">
     Terminal seguro de comunicação
     <br>
-    Laboratório WebRTC
+    Laboratório WebRTC e diagnóstico ICE
   </p>
 
   <button id="entrar" disabled>
@@ -178,6 +178,26 @@ audio { display: none; }
     </div>
 
     <div class="linha">
+      <span>Coleta ICE</span>
+      <span class="valor" id="iceStatus">Não iniciada</span>
+    </div>
+
+    <div class="linha">
+      <span>Candidatos ICE</span>
+      <span class="valor" id="iceTotal">0</span>
+    </div>
+
+    <div class="linha">
+      <span>Tipos encontrados</span>
+      <span class="valor" id="iceTipos">Nenhum</span>
+    </div>
+
+    <div class="linha">
+      <span>Tempo de coleta</span>
+      <span class="valor" id="iceTempo">0 s</span>
+    </div>
+
+    <div class="linha">
       <span>Última mensagem</span>
       <span class="valor" id="ultimaMensagem">Nenhuma</span>
     </div>
@@ -185,7 +205,7 @@ audio { display: none; }
 
   <audio id="audioRemoto" autoplay playsinline></audio>
 
-  <small>SEBASTIÃO SYSTEMS • LABORATÓRIO 04</small>
+  <small>SEBASTIÃO SYSTEMS • LABORATÓRIO 05</small>
 </main>
 
 <script>
@@ -201,6 +221,8 @@ audio { display: none; }
   const WEBSOCKET =
     "wss://b0z9d37i01.execute-api.us-east-1.amazonaws.com/dev";
 
+  const LIMITE_ICE_MS = 25000;
+
   const $ = id => document.getElementById(id);
 
   const botao = $("entrar");
@@ -212,6 +234,14 @@ audio { display: none; }
   let fluxoLocal = null;
   let validade = 0;
 
+  let candidatos = {
+    host: 0,
+    srflx: 0,
+    relay: 0,
+    prflx: 0,
+    outros: 0
+  };
+
   function mensagem(texto, classe = "") {
     $("status").textContent = texto;
     $("status").className = classe;
@@ -220,6 +250,37 @@ audio { display: none; }
   function liberarBotao() {
     botao.disabled = false;
     botao.textContent = "Entrar e conectar";
+  }
+
+  function atualizarCandidatos() {
+    const total = Object.values(candidatos)
+      .reduce((a, b) => a + b, 0);
+
+    $("iceTotal").textContent = String(total);
+
+    const tipos = Object.entries(candidatos)
+      .filter(([tipo, quantidade]) => quantidade > 0)
+      .map(([tipo, quantidade]) =>
+        tipo + ": " + quantidade
+      );
+
+    $("iceTipos").textContent =
+      tipos.length ? tipos.join(" / ") : "Nenhum";
+  }
+
+  function zerarDiagnostico() {
+    candidatos = {
+      host: 0,
+      srflx: 0,
+      relay: 0,
+      prflx: 0,
+      outros: 0
+    };
+
+    $("iceStatus").textContent = "Não iniciada";
+    $("iceTempo").textContent = "0 s";
+
+    atualizarCandidatos();
   }
 
   function fecharRTC() {
@@ -238,65 +299,117 @@ audio { display: none; }
     }
   }
 
-  botaoMicrofone.addEventListener("click", async function () {
-    try {
-      if (!navigator.mediaDevices?.getUserMedia) {
-        throw new Error("Microfone indisponível no navegador.");
+  botaoMicrofone.addEventListener(
+    "click",
+    async function () {
+      try {
+        if (!navigator.mediaDevices?.getUserMedia) {
+          throw new Error(
+            "Microfone indisponível no navegador."
+          );
+        }
+
+        if (!fluxoLocal) {
+          fluxoLocal =
+            await navigator.mediaDevices.getUserMedia({
+              audio: true,
+              video: false
+            });
+        }
+
+        $("micStatus").textContent = "Preparado";
+        botaoMicrofone.textContent =
+          "Microfone preparado";
+        botaoMicrofone.disabled = true;
+
+        mensagem(
+          "Microfone preparado para a chamada.",
+          "ok"
+        );
+
+      } catch (erro) {
+        $("micStatus").textContent = "Falha";
+
+        mensagem(
+          "Microfone: " + erro.message,
+          "erro"
+        );
       }
-
-      if (!fluxoLocal) {
-        fluxoLocal = await navigator.mediaDevices.getUserMedia({
-          audio: true,
-          video: false
-        });
-      }
-
-      $("micStatus").textContent = "Preparado";
-      botaoMicrofone.textContent = "Microfone preparado";
-      botaoMicrofone.disabled = true;
-
-      mensagem("Microfone preparado para a chamada.", "ok");
-
-    } catch (erro) {
-      $("micStatus").textContent = "Falha";
-      mensagem("Microfone: " + erro.message, "erro");
     }
-  });
+  );
 
-  function esperarICE(pc) {
+  async function esperarICE(pc) {
+    const inicio = performance.now();
+
     if (pc.iceGatheringState === "complete") {
-      return Promise.resolve(true);
+      $("iceStatus").textContent = "Concluída";
+      return true;
     }
 
     return new Promise(resolve => {
-      let terminado = false;
+      let finalizado = false;
+      let relogio;
+      let limite;
 
       function finalizar(completo) {
-        if (terminado) return;
-        terminado = true;
+        if (finalizado) return;
+
+        finalizado = true;
+
+        clearInterval(relogio);
         clearTimeout(limite);
+
         pc.removeEventListener(
           "icegatheringstatechange",
           verificar
         );
+
+        const segundos =
+          ((performance.now() - inicio) / 1000)
+            .toFixed(1);
+
+        $("iceTempo").textContent =
+          segundos + " s";
+
+        $("iceStatus").textContent =
+          completo
+            ? "Concluída"
+            : "Tempo limite atingido";
+
         resolve(completo);
       }
 
       function verificar() {
-        if (pc.iceGatheringState === "complete") {
+        $("iceStatus").textContent =
+          pc.iceGatheringState;
+
+        if (
+          pc.iceGatheringState === "complete"
+        ) {
           finalizar(true);
         }
       }
 
-      const limite = setTimeout(
+      relogio = setInterval(() => {
+        const segundos =
+          ((performance.now() - inicio) / 1000)
+            .toFixed(1);
+
+        $("iceTempo").textContent =
+          segundos + " s";
+      }, 500);
+
+      limite = setTimeout(
         () => finalizar(false),
-        8000
+        LIMITE_ICE_MS
       );
 
       pc.addEventListener(
         "icegatheringstatechange",
         verificar
       );
+
+      verificar();
     });
   }
 
@@ -304,7 +417,10 @@ audio { display: none; }
     $("ultimaMensagem").textContent =
       "Oferta SDP da Alexa recebida";
 
-    $("rtcStatus").textContent = "Processando oferta";
+    $("rtcStatus").textContent =
+      "Processando oferta";
+
+    zerarDiagnostico();
 
     const sdp = dados?.offer?.value;
 
@@ -314,7 +430,9 @@ audio { display: none; }
       !sdp.startsWith("v=0") ||
       typeof dados.sessionId !== "string"
     ) {
-      $("rtcStatus").textContent = "Oferta inválida";
+      $("rtcStatus").textContent =
+        "Oferta inválida";
+
       mensagem("Oferta SDP inválida.", "erro");
       return;
     }
@@ -332,19 +450,57 @@ audio { display: none; }
 
       conexaoRTC = pc;
 
+      pc.onicecandidate = evento => {
+        if (!evento.candidate) return;
+
+        const candidato = evento.candidate;
+
+        const tipo =
+          candidato.type ||
+          candidato.candidate.match(
+            / typ (host|srflx|relay|prflx)/
+          )?.[1] ||
+          "outros";
+
+        if (
+          Object.prototype.hasOwnProperty.call(
+            candidatos,
+            tipo
+          )
+        ) {
+          candidatos[tipo]++;
+        } else {
+          candidatos.outros++;
+        }
+
+        atualizarCandidatos();
+      };
+
+      pc.onicegatheringstatechange = () => {
+        $("iceStatus").textContent =
+          pc.iceGatheringState;
+      };
+
+      pc.onicecandidateerror = () => {
+        // Não exibe IPs nem endereços de rede.
+        // Um erro de STUN não significa
+        // necessariamente falha completa.
+        $("ultimaMensagem").textContent =
+          "Aviso de rede ICE detectado";
+      };
+
       pc.ontrack = evento => {
         const audio = $("audioRemoto");
 
-        if (evento.streams?.[0]) {
-          audio.srcObject = evento.streams[0];
-        } else {
-          audio.srcObject = new MediaStream([evento.track]);
-        }
+        audio.srcObject =
+          evento.streams?.[0] ||
+          new MediaStream([evento.track]);
 
         audio.play().catch(() => {
           mensagem(
-            "Áudio recebido, mas o navegador " +
-            "ainda não permitiu reprodução automática."
+            "Faixa de áudio recebida, mas o " +
+            "navegador bloqueou a reprodução.",
+            "erro"
           );
         });
       };
@@ -355,25 +511,51 @@ audio { display: none; }
       };
 
       if (fluxoLocal) {
-        fluxoLocal.getAudioTracks().forEach(track => {
-          pc.addTrack(track, fluxoLocal);
-        });
+        fluxoLocal
+          .getAudioTracks()
+          .forEach(track => {
+            pc.addTrack(track, fluxoLocal);
+          });
       }
+
+      mensagem(
+        "Aplicando oferta SDP recebida..."
+      );
 
       await pc.setRemoteDescription({
         type: "offer",
         sdp
       });
 
+      mensagem(
+        "Oferta aceita. Gerando resposta SDP..."
+      );
+
       const resposta = await pc.createAnswer();
 
       await pc.setLocalDescription(resposta);
 
-      const iceCompleto = await esperarICE(pc);
+      $("rtcStatus").textContent =
+        "Coletando candidatos ICE";
 
-      if (!iceCompleto) {
+      $("iceStatus").textContent =
+        pc.iceGatheringState;
+
+      mensagem(
+        "Coletando candidatos ICE. " +
+        "Aguarde até 25 segundos..."
+      );
+
+      const completo = await esperarICE(pc);
+
+      if (!completo) {
+        const total = Object.values(candidatos)
+          .reduce((a, b) => a + b, 0);
+
         throw new Error(
-          "Coleta ICE incompleta. Resposta não enviada."
+          "Coleta ICE incompleta após 25 s. " +
+          "Candidatos encontrados: " + total +
+          ". Estado: " + pc.iceGatheringState
         );
       }
 
@@ -384,11 +566,17 @@ audio { display: none; }
         typeof respostaSDP !== "string" ||
         !respostaSDP.startsWith("v=0")
       ) {
-        throw new Error("Resposta SDP não gerada.");
+        throw new Error(
+          "Resposta SDP não gerada."
+        );
       }
 
-      if (socket?.readyState !== WebSocket.OPEN) {
-        throw new Error("WebSocket desconectado.");
+      if (
+        socket?.readyState !== WebSocket.OPEN
+      ) {
+        throw new Error(
+          "WebSocket desconectado."
+        );
       }
 
       socket.send(JSON.stringify({
@@ -400,26 +588,37 @@ audio { display: none; }
         }
       }));
 
-      $("rtcStatus").textContent = "Resposta enviada";
+      $("rtcStatus").textContent =
+        "Resposta enviada";
+
+      $("ultimaMensagem").textContent =
+        "Resposta SDP encaminhada à AWS";
 
       mensagem(
-        "Resposta SDP enviada à AWS!",
+        "Resposta SDP enviada à AWS! " +
+        "Candidatos encontrados: " +
+        $("iceTotal").textContent,
         "ok"
       );
 
     } catch (erro) {
-      $("rtcStatus").textContent = "Falha WebRTC";
+      $("rtcStatus").textContent =
+        "Falha WebRTC";
 
       mensagem(
-        "Falha ao processar oferta: " + erro.message,
+        "Falha ao processar oferta: " +
+        erro.message,
         "erro"
       );
 
-      if (socket?.readyState === WebSocket.OPEN) {
+      if (
+        socket?.readyState === WebSocket.OPEN
+      ) {
         socket.send(JSON.stringify({
           action: "webrtc_error",
           sessionId: dados.sessionId,
-          message: "Falha na negociação do terminal"
+          message:
+            "Falha na negociação do terminal"
         }));
       }
 
@@ -432,7 +631,10 @@ audio { display: none; }
   }
 
   function conectarWebSocket(token) {
-    if (!token || Date.now() >= validade) {
+    if (
+      !token ||
+      Date.now() >= validade
+    ) {
       mensagem("Crachá expirado.", "erro");
       liberarBotao();
       return;
@@ -440,15 +642,20 @@ audio { display: none; }
 
     fecharSocket();
     fecharRTC();
+    zerarDiagnostico();
 
-    $("wsStatus").textContent = "Conectando...";
+    $("wsStatus").textContent =
+      "Conectando...";
 
     socket = new WebSocket(
-      WEBSOCKET + "?token=" + encodeURIComponent(token)
+      WEBSOCKET +
+      "?token=" +
+      encodeURIComponent(token)
     );
 
     socket.onopen = () => {
-      $("wsStatus").textContent = "Conectada";
+      $("wsStatus").textContent =
+        "Conectada";
 
       mensagem(
         "Terminal autenticado. Aguardando a Echo.",
@@ -479,6 +686,14 @@ audio { display: none; }
         return;
       }
 
+      if (
+        dados.action === "webrtc_recebido"
+      ) {
+        $("ultimaMensagem").textContent =
+          "Evento WebRTC recebido pela central";
+        return;
+      }
+
       $("ultimaMensagem").textContent =
         dados.mensagem ||
         dados.message ||
@@ -498,13 +713,17 @@ audio { display: none; }
     };
 
     socket.onclose = () => {
-      $("wsStatus").textContent = "Desconectada";
+      $("wsStatus").textContent =
+        "Desconectada";
+
       fecharRTC();
     };
   }
 
   async function solicitarCracha(accessToken) {
-    mensagem("AWS verificando identidade Amazon...");
+    mensagem(
+      "AWS verificando identidade Amazon..."
+    );
 
     try {
       const resposta = await fetch(EMISSOR, {
@@ -522,7 +741,8 @@ audio { display: none; }
 
       if (!resposta.ok) {
         throw new Error(
-          dados.erro || "Credencial recusada."
+          dados.erro ||
+          "Credencial recusada."
         );
       }
 
@@ -531,17 +751,24 @@ audio { display: none; }
         dados.expiresIn !== 300 ||
         dados.terminalId !== "celular-teste"
       ) {
-        throw new Error("Resposta inesperada da AWS.");
+        throw new Error(
+          "Resposta inesperada da AWS."
+        );
       }
 
-      validade = Date.now() + 300000;
+      validade =
+        Date.now() +
+        dados.expiresIn * 1000;
 
-      $("crachaStatus").textContent = "Emitido: 5 min";
+      $("crachaStatus").textContent =
+        "Emitido: 5 min";
 
       conectarWebSocket(dados.token);
 
     } catch (erro) {
-      $("crachaStatus").textContent = "Falha";
+      $("crachaStatus").textContent =
+        "Falha";
+
       mensagem(erro.message, "erro");
       liberarBotao();
     }
@@ -549,70 +776,106 @@ audio { display: none; }
 
   window.onAmazonLoginReady = function () {
     try {
-      window.amazon.Login.setClientId(CLIENT_ID);
+      window.amazon.Login.setClientId(
+        CLIENT_ID
+      );
 
       amazonPronta = true;
-
       liberarBotao();
-      mensagem("Pronto para autenticar.");
+
+      mensagem(
+        "Pronto para autenticar."
+      );
 
     } catch {
-      mensagem("Falha ao iniciar Amazon.", "erro");
+      mensagem(
+        "Falha ao iniciar Amazon.",
+        "erro"
+      );
     }
   };
 
-  botao.addEventListener("click", function () {
-    if (!amazonPronta) return;
+  botao.addEventListener(
+    "click",
+    function () {
+      if (!amazonPronta) return;
 
-    botao.disabled = true;
+      botao.disabled = true;
 
-    fecharRTC();
-    fecharSocket();
+      fecharRTC();
+      fecharSocket();
 
-    $("amazonStatus").textContent = "Autenticando";
-    $("crachaStatus").textContent = "Aguardando";
-    $("wsStatus").textContent = "Desconectada";
-    $("rtcStatus").textContent = "Aguardando";
+      $("amazonStatus").textContent =
+        "Autenticando";
 
-    mensagem("Aguardando login Amazon...");
+      $("crachaStatus").textContent =
+        "Aguardando";
 
-    window.amazon.Login.authorize(
-      {
-        scope: "profile:user_id",
-        pkce: true,
-        popup: true,
-        interactive: "always"
-      },
-      function (resultado) {
-        if (resultado.error || !resultado.code) {
-          mensagem("Login Amazon não concluído.", "erro");
-          liberarBotao();
-          return;
-        }
+      $("wsStatus").textContent =
+        "Desconectada";
 
-        window.amazon.Login.retrieveToken(
-          resultado.code,
-          function (token) {
-            if (
-              token.error ||
-              !token.success ||
-              !token.access_token
-            ) {
-              mensagem("Falha no login Amazon.", "erro");
-              liberarBotao();
-              return;
-            }
+      $("rtcStatus").textContent =
+        "Aguardando";
 
-            $("amazonStatus").textContent = "Autorizada";
+      zerarDiagnostico();
 
-            solicitarCracha(token.access_token);
+      mensagem(
+        "Aguardando login Amazon..."
+      );
+
+      window.amazon.Login.authorize(
+        {
+          scope: "profile:user_id",
+          pkce: true,
+          popup: true,
+          interactive: "always"
+        },
+        function (resultado) {
+          if (
+            resultado.error ||
+            !resultado.code
+          ) {
+            mensagem(
+              "Login Amazon não concluído.",
+              "erro"
+            );
+
+            liberarBotao();
+            return;
           }
-        );
-      }
-    );
-  });
 
-  const script = document.createElement("script");
+          window.amazon.Login.retrieveToken(
+            resultado.code,
+            function (token) {
+              if (
+                token.error ||
+                !token.success ||
+                !token.access_token
+              ) {
+                mensagem(
+                  "Falha no login Amazon.",
+                  "erro"
+                );
+
+                liberarBotao();
+                return;
+              }
+
+              $("amazonStatus").textContent =
+                "Autorizada";
+
+              solicitarCracha(
+                token.access_token
+              );
+            }
+          );
+        }
+      );
+    }
+  );
+
+  const script =
+    document.createElement("script");
 
   script.id = "amazon-login-sdk";
   script.async = true;
@@ -621,7 +884,10 @@ audio { display: none; }
     "https://assets.loginwithamazon.com/sdk/na/login1.js";
 
   script.onerror = () => {
-    mensagem("Falha ao carregar Amazon.", "erro");
+    mensagem(
+      "Falha ao carregar Amazon.",
+      "erro"
+    );
   };
 
   $("amazon-root").appendChild(script);
