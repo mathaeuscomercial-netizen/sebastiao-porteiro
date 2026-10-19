@@ -3,209 +3,138 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Terminal Seguro | Sebastião Porteiro™</title>
-
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sebastião Porteiro | Laboratório 06</title>
 <style>
 :root {
-  color-scheme: dark;
-  --fundo: #101e1a;
-  --painel: #1b3028;
-  --dourado: #c7a66a;
-  --marfim: #f2ebda;
-  --verde: #9fdbb1;
+  color-scheme:dark;
+  --fundo:#101e1a;
+  --painel:#1b3028;
+  --ouro:#c7a66a;
+  --texto:#f2ebda;
 }
-* { box-sizing: border-box; }
-
+* { box-sizing:border-box }
 body {
-  margin: 0;
-  min-height: 100vh;
-  display: grid;
-  place-items: center;
-  padding: 24px;
-  background: var(--fundo);
-  color: var(--marfim);
-  font-family: Georgia, serif;
+  margin:0; min-height:100vh;
+  display:grid; place-items:center;
+  background:var(--fundo);color:var(--texto);
+  font-family:Georgia,serif;padding:22px;
 }
-
 main {
-  width: 100%;
-  max-width: 450px;
-  padding: 36px 24px;
-  background: var(--painel);
-  border: 1px solid #756442;
-  border-radius: 24px;
-  text-align: center;
+  width:100%;max-width:460px;
+  padding:32px 22px;text-align:center;
+  background:var(--painel);
+  border:1px solid #756442;border-radius:24px;
 }
-
-.simbolo { font-size: 50px; }
-
-.marca {
-  color: var(--dourado);
-  letter-spacing: 4px;
-  font-size: 12px;
-}
-
-h1 {
-  font-size: 34px;
-  font-weight: normal;
-}
-
-.descricao {
-  color: #c5cfc6;
-  line-height: 1.6;
-}
-
+.marca {color:var(--ouro);letter-spacing:3px}
+h1 {font-weight:normal;font-size:34px}
+p {line-height:1.6}
 button {
-  width: 100%;
-  margin-top: 15px;
-  padding: 16px;
-  background: var(--dourado);
-  border: 0;
-  border-radius: 12px;
-  color: var(--fundo);
-  font-weight: bold;
-  font-size: 16px;
-  cursor: pointer;
+  width:100%;padding:16px;margin-top:14px;
+  background:var(--ouro);color:var(--fundo);
+  border:0;border-radius:12px;
+  font-size:16px;font-weight:bold;
 }
-
-button.secundario {
-  background: transparent;
-  color: var(--dourado);
-  border: 1px solid var(--dourado);
+button.sec {
+  color:var(--ouro);background:transparent;
+  border:1px solid var(--ouro);
 }
-
-button:disabled {
-  opacity: .5;
-  cursor: wait;
-}
-
+button:disabled {opacity:.55}
 .quadro {
-  margin-top: 24px;
-  padding: 18px;
-  background: var(--fundo);
-  border: 1px solid #536454;
-  border-radius: 14px;
-  text-align: left;
+  background:var(--fundo);padding:16px;
+  margin-top:22px;border-radius:14px;
+  border:1px solid #536454;
 }
-
 .linha {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  padding: 10px 0;
-  border-bottom: 1px solid #34483c;
+  display:flex;justify-content:space-between;
+  gap:14px;padding:10px 0;
+  border-bottom:1px solid #34483c;
+  text-align:left;
 }
-
-.linha:last-child { border: 0; }
-
+.linha:last-child {border:0}
 .valor {
-  text-align: right;
-  color: var(--dourado);
-  overflow-wrap: anywhere;
+  color:var(--ouro);
+  text-align:right;overflow-wrap:anywhere;
 }
-
-#status {
-  margin-top: 22px;
-  line-height: 1.6;
-  overflow-wrap: anywhere;
-}
-
-.ok { color: var(--verde); }
-.erro { color: #ffb1ab; }
-
-small {
-  display: block;
-  margin-top: 24px;
-  color: #b1ad98;
-  letter-spacing: 2px;
-}
-
-audio { display: none; }
+#status {margin:24px 0;line-height:1.6}
+.ok {color:#9fdbb1}
+.erro {color:#ffb1ab}
+small {display:block;margin-top:24px;color:var(--ouro)}
+audio {display:none}
 </style>
 </head>
-
 <body>
+
 <div id="amazon-root"></div>
 
 <main>
-  <div class="simbolo">🏰</div>
-  <div class="marca">MASMORRA-SEDE</div>
+  <div style="font-size:48px">🏰</div>
+  <p class="marca">MASMORRA-SEDE</p>
   <h1>Sebastião Porteiro™</h1>
+  <p>Diagnóstico de áudio WebRTC</p>
 
-  <p class="descricao">
-    Terminal seguro de comunicação
-    <br>
-    Laboratório WebRTC e diagnóstico ICE
-  </p>
+  <button id="entrar" disabled>Carregando Amazon...</button>
+  <button id="microfone" class="sec">Preparar microfone</button>
 
-  <button id="entrar" disabled>
-    Carregando Amazon...
-  </button>
-
-  <button id="microfone" class="secundario">
-    Preparar microfone
-  </button>
-
-  <div id="status" aria-live="polite">
-    Inicializando.
-  </div>
+  <div id="status">Inicializando...</div>
 
   <div class="quadro">
     <div class="linha">
       <span>Conta Amazon</span>
       <span class="valor" id="amazonStatus">Aguardando</span>
     </div>
-
     <div class="linha">
-      <span>Crachá digital</span>
+      <span>Crachá</span>
       <span class="valor" id="crachaStatus">Aguardando</span>
     </div>
-
     <div class="linha">
       <span>Central AWS</span>
       <span class="valor" id="wsStatus">Desconectada</span>
     </div>
-
     <div class="linha">
       <span>Microfone</span>
       <span class="valor" id="micStatus">Inativo</span>
     </div>
-
     <div class="linha">
       <span>WebRTC</span>
       <span class="valor" id="rtcStatus">Aguardando</span>
     </div>
-
     <div class="linha">
-      <span>Coleta ICE</span>
-      <span class="valor" id="iceStatus">Não iniciada</span>
+      <span>Trickle ICE</span>
+      <span class="valor" id="trickleStatus">Não verificado</span>
     </div>
-
     <div class="linha">
-      <span>Candidatos ICE</span>
-      <span class="valor" id="iceTotal">0</span>
+      <span>Estado ICE</span>
+      <span class="valor" id="iceStatus">Não iniciado</span>
     </div>
-
     <div class="linha">
-      <span>Tipos encontrados</span>
-      <span class="valor" id="iceTipos">Nenhum</span>
+      <span>Candidatos totais</span>
+      <span class="valor" id="totalStatus">0</span>
     </div>
-
     <div class="linha">
-      <span>Tempo de coleta</span>
-      <span class="valor" id="iceTempo">0 s</span>
+      <span>Candidatos IPv4</span>
+      <span class="valor" id="ipv4Status">0</span>
     </div>
-
     <div class="linha">
-      <span>Última mensagem</span>
-      <span class="valor" id="ultimaMensagem">Nenhuma</span>
+      <span>Tipos ICE</span>
+      <span class="valor" id="tiposStatus">Nenhum</span>
+    </div>
+    <div class="linha">
+      <span>Tempo</span>
+      <span class="valor" id="tempoStatus">0 s</span>
+    </div>
+    <div class="linha">
+      <span>Resposta SDP</span>
+      <span class="valor" id="sdpStatus">Não gerada</span>
+    </div>
+    <div class="linha">
+      <span>Último evento</span>
+      <span class="valor" id="eventoStatus">Nenhum</span>
     </div>
   </div>
 
   <audio id="audioRemoto" autoplay playsinline></audio>
-
-  <small>SEBASTIÃO SYSTEMS • LABORATÓRIO 05</small>
+  <small>SEBASTIÃO SYSTEMS • LABORATÓRIO 06</small>
 </main>
 
 <script>
@@ -218,195 +147,133 @@ audio { display: none; }
   const EMISSOR =
     "https://yfy6x3xbsn4ntldhfypaz5gkoa0jgsmy.lambda-url.us-east-1.on.aws/";
 
-  const WEBSOCKET =
+  const WS =
     "wss://b0z9d37i01.execute-api.us-east-1.amazonaws.com/dev";
 
-  const LIMITE_ICE_MS = 25000;
+  const LIMITE_ICE = 5000;
 
   const $ = id => document.getElementById(id);
 
-  const botao = $("entrar");
-  const botaoMicrofone = $("microfone");
-
   let amazonPronta = false;
   let socket = null;
-  let conexaoRTC = null;
-  let fluxoLocal = null;
+  let pc = null;
+  let microfone = null;
   let validade = 0;
 
-  let candidatos = {
-    host: 0,
-    srflx: 0,
-    relay: 0,
-    prflx: 0,
-    outros: 0
-  };
-
-  function mensagem(texto, classe = "") {
+  function mensagem(texto, tipo = "") {
     $("status").textContent = texto;
-    $("status").className = classe;
+    $("status").className = tipo;
   }
 
-  function liberarBotao() {
-    botao.disabled = false;
-    botao.textContent = "Entrar e conectar";
-  }
-
-  function atualizarCandidatos() {
-    const total = Object.values(candidatos)
-      .reduce((a, b) => a + b, 0);
-
-    $("iceTotal").textContent = String(total);
-
-    const tipos = Object.entries(candidatos)
-      .filter(([tipo, quantidade]) => quantidade > 0)
-      .map(([tipo, quantidade]) =>
-        tipo + ": " + quantidade
-      );
-
-    $("iceTipos").textContent =
-      tipos.length ? tipos.join(" / ") : "Nenhum";
-  }
-
-  function zerarDiagnostico() {
-    candidatos = {
-      host: 0,
-      srflx: 0,
-      relay: 0,
-      prflx: 0,
-      outros: 0
-    };
-
-    $("iceStatus").textContent = "Não iniciada";
-    $("iceTempo").textContent = "0 s";
-
-    atualizarCandidatos();
+  function liberar() {
+    $("entrar").disabled = false;
+    $("entrar").textContent = "Entrar e conectar";
   }
 
   function fecharRTC() {
-    if (conexaoRTC) {
-      conexaoRTC.close();
-      conexaoRTC = null;
+    if (pc) {
+      pc.close();
+      pc = null;
     }
   }
 
   function fecharSocket() {
     if (socket) {
-      const anterior = socket;
+      const antigo = socket;
       socket = null;
-      anterior.onclose = null;
-      anterior.close();
+      antigo.onclose = null;
+      antigo.close();
     }
   }
 
-  botaoMicrofone.addEventListener(
-    "click",
-    async function () {
-      try {
-        if (!navigator.mediaDevices?.getUserMedia) {
-          throw new Error(
-            "Microfone indisponível no navegador."
-          );
-        }
+  function tipoCandidato(c) {
+    return c.type ||
+      c.candidate.match(
+        / typ (host|srflx|relay|prflx)/
+      )?.[1] || "outro";
+  }
 
-        if (!fluxoLocal) {
-          fluxoLocal =
-            await navigator.mediaDevices.getUserMedia({
-              audio: true,
-              video: false
-            });
-        }
+  function enderecoIPv4(c) {
+    const partes = c.candidate.split(" ");
+    const endereco = partes[4];
 
-        $("micStatus").textContent = "Preparado";
-        botaoMicrofone.textContent =
-          "Microfone preparado";
-        botaoMicrofone.disabled = true;
-
-        mensagem(
-          "Microfone preparado para a chamada.",
-          "ok"
-        );
-
-      } catch (erro) {
-        $("micStatus").textContent = "Falha";
-
-        mensagem(
-          "Microfone: " + erro.message,
-          "erro"
-        );
-      }
+    if (!/^\d{1,3}(\.\d{1,3}){3}$/.test(endereco || "")) {
+      return false;
     }
-  );
 
-  async function esperarICE(pc) {
-    const inicio = performance.now();
+    return endereco.split(".").every(n =>
+      Number(n) >= 0 && Number(n) <= 255
+    );
+  }
 
-    if (pc.iceGatheringState === "complete") {
-      $("iceStatus").textContent = "Concluída";
+  function candidatosDoSDP(sdp) {
+    return (sdp.match(/^a=candidate:/gm) || []).length;
+  }
+
+  $("microfone").onclick = async () => {
+    try {
+      if (!microfone) {
+        microfone = await navigator.mediaDevices.getUserMedia({
+          audio:true,
+          video:false
+        });
+      }
+      $("micStatus").textContent = "Preparado";
+      $("microfone").textContent = "Microfone preparado";
+      $("microfone").disabled = true;
+      mensagem("Microfone pronto.", "ok");
+    } catch (erro) {
+      mensagem("Microfone: " + erro.message, "erro");
+    }
+  };
+
+  async function esperarICE(conexao, inicio) {
+    if (conexao.iceGatheringState === "complete") {
       return true;
     }
 
     return new Promise(resolve => {
-      let finalizado = false;
-      let relogio;
+      let encerrado = false;
+      let intervalo;
       let limite;
 
       function finalizar(completo) {
-        if (finalizado) return;
+        if (encerrado) return;
+        encerrado = true;
 
-        finalizado = true;
-
-        clearInterval(relogio);
+        clearInterval(intervalo);
         clearTimeout(limite);
-
-        pc.removeEventListener(
-          "icegatheringstatechange",
-          verificar
+        conexao.removeEventListener(
+          "icegatheringstatechange", verificar
         );
 
-        const segundos =
-          ((performance.now() - inicio) / 1000)
-            .toFixed(1);
-
-        $("iceTempo").textContent =
-          segundos + " s";
-
-        $("iceStatus").textContent =
-          completo
-            ? "Concluída"
-            : "Tempo limite atingido";
+        $("tempoStatus").textContent =
+          ((performance.now() - inicio) / 1000).toFixed(1) + " s";
 
         resolve(completo);
       }
 
       function verificar() {
         $("iceStatus").textContent =
-          pc.iceGatheringState;
+          conexao.iceGatheringState;
 
-        if (
-          pc.iceGatheringState === "complete"
-        ) {
+        if (conexao.iceGatheringState === "complete") {
           finalizar(true);
         }
       }
 
-      relogio = setInterval(() => {
-        const segundos =
-          ((performance.now() - inicio) / 1000)
-            .toFixed(1);
-
-        $("iceTempo").textContent =
-          segundos + " s";
-      }, 500);
+      intervalo = setInterval(() => {
+        $("tempoStatus").textContent =
+          ((performance.now() - inicio) / 1000).toFixed(1) + " s";
+      }, 200);
 
       limite = setTimeout(
         () => finalizar(false),
-        LIMITE_ICE_MS
+        LIMITE_ICE
       );
 
-      pc.addEventListener(
-        "icegatheringstatechange",
-        verificar
+      conexao.addEventListener(
+        "icegatheringstatechange", verificar
       );
 
       verificar();
@@ -414,260 +281,217 @@ audio { display: none; }
   }
 
   async function receberOferta(dados) {
-    $("ultimaMensagem").textContent =
-      "Oferta SDP da Alexa recebida";
+    fecharRTC();
 
-    $("rtcStatus").textContent =
-      "Processando oferta";
-
-    zerarDiagnostico();
-
-    const sdp = dados?.offer?.value;
+    const oferta = dados?.offer?.value;
 
     if (
       dados?.offer?.format !== "SDP" ||
-      typeof sdp !== "string" ||
-      !sdp.startsWith("v=0") ||
+      typeof oferta !== "string" ||
+      !oferta.startsWith("v=0") ||
       typeof dados.sessionId !== "string"
     ) {
-      $("rtcStatus").textContent =
-        "Oferta inválida";
-
-      mensagem("Oferta SDP inválida.", "erro");
+      mensagem("Oferta WebRTC inválida.", "erro");
       return;
     }
 
-    fecharRTC();
+    $("eventoStatus").textContent = "Oferta Alexa recebida";
+    $("rtcStatus").textContent = "Negociando";
+    $("sdpStatus").textContent = "Não gerada";
+    $("iceStatus").textContent = "Iniciando";
+    $("trickleStatus").textContent = "Verificando";
+    $("totalStatus").textContent = "0";
+    $("ipv4Status").textContent = "0";
+    $("tiposStatus").textContent = "Nenhum";
+    $("tempoStatus").textContent = "0 s";
 
-    let pc;
+    let total = 0;
+    let ipv4 = 0;
+    const tipos = {};
+
+    const inicio = performance.now();
 
     try {
-      pc = new RTCPeerConnection({
+      const conexao = new RTCPeerConnection({
         iceServers: [{
-          urls: "stun:stun.l.google.com:19302"
+          urls:"stun:stun.l.google.com:19302"
         }]
       });
 
-      conexaoRTC = pc;
+      pc = conexao;
 
-      pc.onicecandidate = evento => {
+      conexao.onicecandidate = evento => {
         if (!evento.candidate) return;
 
-        const candidato = evento.candidate;
+        total++;
+        $("totalStatus").textContent = String(total);
 
-        const tipo =
-          candidato.type ||
-          candidato.candidate.match(
-            / typ (host|srflx|relay|prflx)/
-          )?.[1] ||
-          "outros";
-
-        if (
-          Object.prototype.hasOwnProperty.call(
-            candidatos,
-            tipo
-          )
-        ) {
-          candidatos[tipo]++;
-        } else {
-          candidatos.outros++;
+        if (enderecoIPv4(evento.candidate)) {
+          ipv4++;
+          $("ipv4Status").textContent = String(ipv4);
         }
 
-        atualizarCandidatos();
+        const tipo = tipoCandidato(evento.candidate);
+        tipos[tipo] = (tipos[tipo] || 0) + 1;
+
+        $("tiposStatus").textContent =
+          Object.entries(tipos)
+            .map(([t, n]) => t + ": " + n)
+            .join(" / ");
       };
 
-      pc.onicegatheringstatechange = () => {
+      conexao.onicegatheringstatechange = () => {
         $("iceStatus").textContent =
-          pc.iceGatheringState;
+          conexao.iceGatheringState;
       };
 
-      pc.onicecandidateerror = () => {
-        // Não exibe IPs nem endereços de rede.
-        // Um erro de STUN não significa
-        // necessariamente falha completa.
-        $("ultimaMensagem").textContent =
-          "Aviso de rede ICE detectado";
-      };
-
-      pc.ontrack = evento => {
-        const audio = $("audioRemoto");
-
-        audio.srcObject =
-          evento.streams?.[0] ||
-          new MediaStream([evento.track]);
-
-        audio.play().catch(() => {
-          mensagem(
-            "Faixa de áudio recebida, mas o " +
-            "navegador bloqueou a reprodução.",
-            "erro"
-          );
-        });
-      };
-
-      pc.onconnectionstatechange = () => {
+      conexao.onconnectionstatechange = () => {
         $("rtcStatus").textContent =
-          "Conexão: " + pc.connectionState;
+          "Conexão: " + conexao.connectionState;
       };
 
-      if (fluxoLocal) {
-        fluxoLocal
-          .getAudioTracks()
-          .forEach(track => {
-            pc.addTrack(track, fluxoLocal);
-          });
+      conexao.ontrack = evento => {
+        const audio = $("audioRemoto");
+        audio.srcObject = evento.streams?.[0] ||
+          new MediaStream([evento.track]);
+        audio.play().catch(() => {});
+      };
+
+      if (microfone) {
+        for (const track of microfone.getAudioTracks()) {
+          conexao.addTrack(track, microfone);
+        }
       }
 
-      mensagem(
-        "Aplicando oferta SDP recebida..."
-      );
-
-      await pc.setRemoteDescription({
-        type: "offer",
-        sdp
+      await conexao.setRemoteDescription({
+        type:"offer",
+        sdp:oferta
       });
 
-      mensagem(
-        "Oferta aceita. Gerando resposta SDP..."
-      );
+      const trickle = conexao.canTrickleIceCandidates;
 
-      const resposta = await pc.createAnswer();
+      $("trickleStatus").textContent =
+        trickle === true ? "Sim (oferta)" :
+        trickle === false ? "Não (oferta)" :
+        "Não informado";
 
-      await pc.setLocalDescription(resposta);
+      const resposta = await conexao.createAnswer();
+      await conexao.setLocalDescription(resposta);
 
-      $("rtcStatus").textContent =
-        "Coletando candidatos ICE";
+      $("sdpStatus").textContent = "Gerada inicialmente";
 
-      $("iceStatus").textContent =
-        pc.iceGatheringState;
+      const completo = await esperarICE(conexao, inicio);
 
-      mensagem(
-        "Coletando candidatos ICE. " +
-        "Aguarde até 25 segundos..."
-      );
-
-      const completo = await esperarICE(pc);
+      const sdpFinal = conexao.localDescription?.sdp || "";
+      const incorporados = candidatosDoSDP(sdpFinal);
+      const segundos =
+        ((performance.now() - inicio) / 1000).toFixed(1);
 
       if (!completo) {
-        const total = Object.values(candidatos)
-          .reduce((a, b) => a + b, 0);
+        $("iceStatus").textContent =
+          "Incompleta após 5 s";
 
+        $("sdpStatus").textContent =
+          "Parcial: " + incorporados + " candidatos";
+
+        $("rtcStatus").textContent =
+          "Aguardando correção da ponte";
+
+        mensagem(
+          "ICE ainda coletando após " + segundos +
+          " s. Encontrados: " + total +
+          " candidatos, sendo " + ipv4 +
+          " IPv4. Incorporados no SDP: " +
+          incorporados + ". Resposta não enviada.",
+          "erro"
+        );
+
+        // A Alexa não suporta Trickle ICE.
+        // Não enviamos SDP parcial como resposta final.
+        return;
+      }
+
+      $("iceStatus").textContent = "Concluída";
+
+      if (
+        !sdpFinal.startsWith("v=0") ||
+        incorporados === 0
+      ) {
         throw new Error(
-          "Coleta ICE incompleta após 25 s. " +
-          "Candidatos encontrados: " + total +
-          ". Estado: " + pc.iceGatheringState
+          "SDP sem candidatos ICE utilizáveis."
         );
       }
 
-      const respostaSDP =
-        pc.localDescription?.sdp;
-
-      if (
-        typeof respostaSDP !== "string" ||
-        !respostaSDP.startsWith("v=0")
-      ) {
-        throw new Error(
-          "Resposta SDP não gerada."
-        );
-      }
-
-      if (
-        socket?.readyState !== WebSocket.OPEN
-      ) {
-        throw new Error(
-          "WebSocket desconectado."
-        );
+      if (socket?.readyState !== WebSocket.OPEN) {
+        throw new Error("WebSocket desconectado.");
       }
 
       socket.send(JSON.stringify({
-        action: "webrtc_answer",
-        sessionId: dados.sessionId,
-        answer: {
-          format: "SDP",
-          value: respostaSDP
+        action:"webrtc_answer",
+        sessionId:dados.sessionId,
+        answer:{
+          format:"SDP",
+          value:sdpFinal
         }
       }));
 
-      $("rtcStatus").textContent =
-        "Resposta enviada";
+      $("sdpStatus").textContent =
+        "Enviada: " + incorporados + " candidatos";
 
-      $("ultimaMensagem").textContent =
-        "Resposta SDP encaminhada à AWS";
+      $("rtcStatus").textContent =
+        "Resposta enviada à AWS";
 
       mensagem(
-        "Resposta SDP enviada à AWS! " +
-        "Candidatos encontrados: " +
-        $("iceTotal").textContent,
+        "Resposta SDP completa enviada à AWS em " +
+        segundos + " segundos.",
         "ok"
       );
 
     } catch (erro) {
-      $("rtcStatus").textContent =
-        "Falha WebRTC";
+      $("rtcStatus").textContent = "Falha WebRTC";
+      $("sdpStatus").textContent = "Falha";
 
       mensagem(
-        "Falha ao processar oferta: " +
-        erro.message,
+        "Erro: " + erro.message,
         "erro"
       );
 
-      if (
-        socket?.readyState === WebSocket.OPEN
-      ) {
+      if (socket?.readyState === WebSocket.OPEN) {
         socket.send(JSON.stringify({
-          action: "webrtc_error",
-          sessionId: dados.sessionId,
-          message:
-            "Falha na negociação do terminal"
+          action:"webrtc_error",
+          sessionId:dados.sessionId,
+          message:"Falha na negociacao WebRTC"
         }));
-      }
-
-      if (pc) pc.close();
-
-      if (conexaoRTC === pc) {
-        conexaoRTC = null;
       }
     }
   }
 
-  function conectarWebSocket(token) {
-    if (
-      !token ||
-      Date.now() >= validade
-    ) {
+  function conectar(token) {
+    if (!token || Date.now() >= validade) {
       mensagem("Crachá expirado.", "erro");
-      liberarBotao();
+      liberar();
       return;
     }
 
     fecharSocket();
     fecharRTC();
-    zerarDiagnostico();
 
-    $("wsStatus").textContent =
-      "Conectando...";
+    $("wsStatus").textContent = "Conectando...";
 
     socket = new WebSocket(
-      WEBSOCKET +
-      "?token=" +
-      encodeURIComponent(token)
+      WS + "?token=" + encodeURIComponent(token)
     );
 
     socket.onopen = () => {
-      $("wsStatus").textContent =
-        "Conectada";
-
-      mensagem(
-        "Terminal autenticado. Aguardando a Echo.",
-        "ok"
-      );
+      $("wsStatus").textContent = "Conectada";
+      mensagem("Terminal autenticado. Aguardando Alexa.", "ok");
 
       socket.send(JSON.stringify({
-        action: "teste",
-        origem: "terminal-seguro"
+        action:"teste",
+        origem:"terminal-seguro"
       }));
 
-      liberarBotao();
+      liberar();
     };
 
     socket.onmessage = evento => {
@@ -676,8 +500,6 @@ audio { display: none; }
       try {
         dados = JSON.parse(evento.data);
       } catch {
-        $("ultimaMensagem").textContent =
-          "Mensagem não reconhecida";
         return;
       }
 
@@ -686,64 +508,44 @@ audio { display: none; }
         return;
       }
 
-      if (
-        dados.action === "webrtc_recebido"
-      ) {
-        $("ultimaMensagem").textContent =
-          "Evento WebRTC recebido pela central";
-        return;
-      }
-
-      $("ultimaMensagem").textContent =
+      $("eventoStatus").textContent =
         dados.mensagem ||
         dados.message ||
         dados.action ||
-        "Resposta recebida";
+        "Mensagem recebida";
     };
 
     socket.onerror = () => {
       $("wsStatus").textContent = "Falha";
-
-      mensagem(
-        "Conexão recusada pela central AWS.",
-        "erro"
-      );
-
-      liberarBotao();
+      mensagem("Conexão WebSocket recusada.", "erro");
+      liberar();
     };
 
     socket.onclose = () => {
-      $("wsStatus").textContent =
-        "Desconectada";
-
+      $("wsStatus").textContent = "Desconectada";
       fecharRTC();
     };
   }
 
   async function solicitarCracha(accessToken) {
-    mensagem(
-      "AWS verificando identidade Amazon..."
-    );
-
     try {
+      mensagem("AWS verificando identidade Amazon...");
+
       const resposta = await fetch(EMISSOR, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
+        method:"POST",
+        headers:{
+          "Content-Type":"application/json"
         },
-        body: JSON.stringify({
-          access_token: accessToken
+        body:JSON.stringify({
+          access_token:accessToken
         }),
-        cache: "no-store"
+        cache:"no-store"
       });
 
       const dados = await resposta.json();
 
       if (!resposta.ok) {
-        throw new Error(
-          dados.erro ||
-          "Credencial recusada."
-        );
+        throw new Error(dados.erro || "Emissor recusou login.");
       }
 
       if (
@@ -751,156 +553,92 @@ audio { display: none; }
         dados.expiresIn !== 300 ||
         dados.terminalId !== "celular-teste"
       ) {
-        throw new Error(
-          "Resposta inesperada da AWS."
-        );
+        throw new Error("Resposta inesperada da AWS.");
       }
 
-      validade =
-        Date.now() +
-        dados.expiresIn * 1000;
+      validade = Date.now() + 300000;
+      $("crachaStatus").textContent = "Emitido: 5 min";
 
-      $("crachaStatus").textContent =
-        "Emitido: 5 min";
-
-      conectarWebSocket(dados.token);
+      conectar(dados.token);
 
     } catch (erro) {
-      $("crachaStatus").textContent =
-        "Falha";
-
+      $("crachaStatus").textContent = "Falha";
       mensagem(erro.message, "erro");
-      liberarBotao();
+      liberar();
     }
   }
 
   window.onAmazonLoginReady = function () {
     try {
-      window.amazon.Login.setClientId(
-        CLIENT_ID
-      );
-
+      window.amazon.Login.setClientId(CLIENT_ID);
       amazonPronta = true;
-      liberarBotao();
-
-      mensagem(
-        "Pronto para autenticar."
-      );
-
+      liberar();
+      mensagem("Pronto para autenticar.");
     } catch {
-      mensagem(
-        "Falha ao iniciar Amazon.",
-        "erro"
-      );
+      mensagem("Falha ao inicializar Amazon.", "erro");
     }
   };
 
-  botao.addEventListener(
-    "click",
-    function () {
-      if (!amazonPronta) return;
+  $("entrar").onclick = () => {
+    if (!amazonPronta) return;
 
-      botao.disabled = true;
+    $("entrar").disabled = true;
+    fecharSocket();
+    fecharRTC();
 
-      fecharRTC();
-      fecharSocket();
+    $("amazonStatus").textContent = "Autenticando";
+    $("crachaStatus").textContent = "Aguardando";
+    $("wsStatus").textContent = "Desconectada";
+    mensagem("Aguardando login Amazon...");
 
-      $("amazonStatus").textContent =
-        "Autenticando";
+    window.amazon.Login.authorize({
+      scope:"profile:user_id",
+      pkce:true,
+      popup:true,
+      interactive:"always"
+    }, resultado => {
+      if (resultado.error || !resultado.code) {
+        mensagem("Login Amazon não concluído.", "erro");
+        liberar();
+        return;
+      }
 
-      $("crachaStatus").textContent =
-        "Aguardando";
-
-      $("wsStatus").textContent =
-        "Desconectada";
-
-      $("rtcStatus").textContent =
-        "Aguardando";
-
-      zerarDiagnostico();
-
-      mensagem(
-        "Aguardando login Amazon..."
-      );
-
-      window.amazon.Login.authorize(
-        {
-          scope: "profile:user_id",
-          pkce: true,
-          popup: true,
-          interactive: "always"
-        },
-        function (resultado) {
+      window.amazon.Login.retrieveToken(
+        resultado.code,
+        token => {
           if (
-            resultado.error ||
-            !resultado.code
+            token.error ||
+            !token.success ||
+            !token.access_token
           ) {
-            mensagem(
-              "Login Amazon não concluído.",
-              "erro"
-            );
-
-            liberarBotao();
+            mensagem("Falha no token Amazon.", "erro");
+            liberar();
             return;
           }
 
-          window.amazon.Login.retrieveToken(
-            resultado.code,
-            function (token) {
-              if (
-                token.error ||
-                !token.success ||
-                !token.access_token
-              ) {
-                mensagem(
-                  "Falha no login Amazon.",
-                  "erro"
-                );
-
-                liberarBotao();
-                return;
-              }
-
-              $("amazonStatus").textContent =
-                "Autorizada";
-
-              solicitarCracha(
-                token.access_token
-              );
-            }
-          );
+          $("amazonStatus").textContent = "Autorizada";
+          solicitarCracha(token.access_token);
         }
       );
-    }
-  );
-
-  const script =
-    document.createElement("script");
-
-  script.id = "amazon-login-sdk";
-  script.async = true;
-
-  script.src =
-    "https://assets.loginwithamazon.com/sdk/na/login1.js";
-
-  script.onerror = () => {
-    mensagem(
-      "Falha ao carregar Amazon.",
-      "erro"
-    );
+    });
   };
 
-  $("amazon-root").appendChild(script);
+  const sdk = document.createElement("script");
+  sdk.async = true;
+  sdk.src =
+    "https://assets.loginwithamazon.com/sdk/na/login1.js";
+
+  sdk.onerror = () => {
+    mensagem("Falha ao carregar Amazon.", "erro");
+  };
+
+  $("amazon-root").appendChild(sdk);
 
   setTimeout(() => {
     if (!amazonPronta) {
-      mensagem(
-        "A Amazon não concluiu a inicialização.",
-        "erro"
-      );
+      mensagem("Amazon não inicializou.", "erro");
     }
   }, 12000);
-
 })();
 </script>
 </body>
