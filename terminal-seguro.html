@@ -1,0 +1,484 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terminal Seguro | Sebastião Porteiro</title>
+
+<style>
+:root {
+  color-scheme: dark;
+  --fundo: #101e1a;
+  --painel: #1b3028;
+  --dourado: #c7a66a;
+  --marfim: #f2ebda;
+  --verde: #9fdbb1;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--fundo);
+  color: var(--marfim);
+  font-family: Georgia, serif;
+}
+
+main {
+  width: 100%;
+  max-width: 450px;
+  padding: 36px 24px;
+  border: 1px solid #756442;
+  border-radius: 24px;
+  background: var(--painel);
+  text-align: center;
+}
+
+.simbolo {
+  font-size: 50px;
+  margin-bottom: 14px;
+}
+
+.marca {
+  letter-spacing: 4px;
+  font-size: 12px;
+  color: var(--dourado);
+}
+
+h1 {
+  font-size: 34px;
+  font-weight: normal;
+}
+
+.descricao {
+  color: #c5cfc6;
+  line-height: 1.6;
+}
+
+button {
+  width: 100%;
+  padding: 17px;
+  margin-top: 20px;
+  background: var(--dourado);
+  border: 0;
+  border-radius: 12px;
+  color: var(--fundo);
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:disabled {
+  opacity: .55;
+  cursor: wait;
+}
+
+.quadro {
+  padding: 18px;
+  margin-top: 24px;
+  background: var(--fundo);
+  border: 1px solid #536454;
+  border-radius: 14px;
+  text-align: left;
+}
+
+.linha {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid #34483c;
+}
+
+.linha:last-child {
+  border-bottom: 0;
+}
+
+.valor {
+  color: var(--dourado);
+  text-align: right;
+}
+
+#status {
+  margin-top: 24px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+
+.ok { color: var(--verde); }
+.erro { color: #ffb1ab; }
+
+small {
+  display: block;
+  margin-top: 30px;
+  color: #b1ad98;
+  letter-spacing: 2px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="amazon-root"></div>
+
+<main>
+  <div class="simbolo">🏰</div>
+  <div class="marca">MASMORRA-SEDE</div>
+
+  <h1>Sebastião Porteiro™</h1>
+
+  <p class="descricao">
+    Terminal seguro de comunicação
+    <br>
+    Laboratório de autenticação WebSocket
+  </p>
+
+  <button id="entrar" disabled>
+    Carregando Amazon...
+  </button>
+
+  <div id="status" aria-live="polite">
+    Inicializando.
+  </div>
+
+  <div class="quadro">
+    <div class="linha">
+      <span>Conta Amazon</span>
+      <span class="valor" id="amazonStatus">
+        Aguardando
+      </span>
+    </div>
+
+    <div class="linha">
+      <span>Crachá digital</span>
+      <span class="valor" id="crachaStatus">
+        Aguardando
+      </span>
+    </div>
+
+    <div class="linha">
+      <span>Central AWS</span>
+      <span class="valor" id="wsStatus">
+        Desconectada
+      </span>
+    </div>
+
+    <div class="linha">
+      <span>Última mensagem</span>
+      <span class="valor" id="ultimaMensagem">
+        Nenhuma
+      </span>
+    </div>
+  </div>
+
+  <small>SEBASTIÃO SYSTEMS • LABORATÓRIO 03</small>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  const CLIENT_ID =
+    "amzn1.application-oa2-client.b48ae2009d2241679b0a2f8b3f09cb42";
+
+  const EMISSOR =
+    "https://yfy6x3xbsn4ntldhfypaz5gkoa0jgsmy.lambda-url.us-east-1.on.aws/";
+
+  const WEBSOCKET =
+    "wss://b0z9d37i01.execute-api.us-east-1.amazonaws.com/dev";
+
+  const botao = document.getElementById("entrar");
+  const status = document.getElementById("status");
+
+  const amazonStatus =
+    document.getElementById("amazonStatus");
+
+  const crachaStatus =
+    document.getElementById("crachaStatus");
+
+  const wsStatus =
+    document.getElementById("wsStatus");
+
+  const ultimaMensagem =
+    document.getElementById("ultimaMensagem");
+
+  let amazonPronta = false;
+  let socket = null;
+  let cracha = null;
+  let validade = 0;
+
+  function mensagem(texto, tipo = "") {
+    status.textContent = texto;
+    status.className = tipo;
+  }
+
+  function liberarBotao() {
+    botao.disabled = false;
+    botao.textContent = "Entrar e conectar";
+  }
+
+  function fecharSocket() {
+    if (socket) {
+      socket.onclose = null;
+      socket.close();
+      socket = null;
+    }
+  }
+
+  function conectarWebSocket(token) {
+    if (
+      !token ||
+      Date.now() >= validade
+    ) {
+      mensagem(
+        "Crachá ausente ou expirado.",
+        "erro"
+      );
+      liberarBotao();
+      return;
+    }
+
+    fecharSocket();
+
+    wsStatus.textContent = "Conectando...";
+    mensagem("Apresentando crachá à central AWS...");
+
+    const endereco =
+      WEBSOCKET +
+      "?token=" +
+      encodeURIComponent(token);
+
+    try {
+      socket = new WebSocket(endereco);
+    } catch {
+      wsStatus.textContent = "Erro";
+      mensagem(
+        "Não foi possível iniciar o WebSocket.",
+        "erro"
+      );
+      liberarBotao();
+      return;
+    }
+
+    socket.onopen = function () {
+      wsStatus.textContent = "Conectada";
+
+      mensagem(
+        "Terminal conectado à central AWS!",
+        "ok"
+      );
+
+      socket.send(JSON.stringify({
+        action: "teste",
+        origem: "terminal-seguro"
+      }));
+
+      liberarBotao();
+    };
+
+    socket.onmessage = function (evento) {
+      try {
+        const dados = JSON.parse(evento.data);
+
+        ultimaMensagem.textContent =
+          dados.mensagem ||
+          dados.message ||
+          dados.action ||
+          "Resposta recebida";
+
+      } catch {
+        ultimaMensagem.textContent =
+          "Mensagem recebida";
+      }
+    };
+
+    socket.onerror = function () {
+      wsStatus.textContent = "Falha";
+
+      mensagem(
+        "A central recusou ou interrompeu a conexão. " +
+        "Confira a configuração de autorização.",
+        "erro"
+      );
+
+      liberarBotao();
+    };
+
+    socket.onclose = function () {
+      wsStatus.textContent = "Desconectada";
+    };
+  }
+
+  async function solicitarCracha(accessToken) {
+    mensagem("AWS verificando sua identidade...");
+
+    try {
+      const resposta = await fetch(EMISSOR, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          access_token: accessToken
+        }),
+        cache: "no-store"
+      });
+
+      const dados = await resposta.json();
+
+      if (!resposta.ok) {
+        throw new Error(
+          dados.erro ||
+          "AWS recusou a solicitação."
+        );
+      }
+
+      if (
+        typeof dados.token !== "string" ||
+        dados.expiresIn !== 300 ||
+        dados.terminalId !== "celular-teste"
+      ) {
+        throw new Error(
+          "Credencial inesperada da AWS."
+        );
+      }
+
+      cracha = dados.token;
+
+      validade =
+        Date.now() + dados.expiresIn * 1000;
+
+      crachaStatus.textContent = "Emitido: 5 min";
+
+      conectarWebSocket(cracha);
+
+    } catch (erro) {
+      crachaStatus.textContent = "Falha";
+      mensagem(erro.message, "erro");
+      liberarBotao();
+    }
+  }
+
+  window.onAmazonLoginReady = function () {
+    try {
+      window.amazon.Login.setClientId(
+        CLIENT_ID
+      );
+
+      amazonPronta = true;
+
+      liberarBotao();
+      mensagem("Pronto para autenticar.");
+
+    } catch {
+      mensagem(
+        "Falha ao inicializar Amazon.",
+        "erro"
+      );
+    }
+  };
+
+  botao.addEventListener("click", function () {
+    if (!amazonPronta) {
+      mensagem(
+        "Amazon ainda não disponível.",
+        "erro"
+      );
+      return;
+    }
+
+    botao.disabled = true;
+
+    fecharSocket();
+
+    cracha = null;
+    validade = 0;
+
+    amazonStatus.textContent = "Autenticando";
+    crachaStatus.textContent = "Aguardando";
+    wsStatus.textContent = "Desconectada";
+
+    mensagem("Aguardando login Amazon...");
+
+    window.amazon.Login.authorize(
+      {
+        scope: "profile:user_id",
+        pkce: true,
+        popup: true,
+        interactive: "always"
+      },
+      function (resultado) {
+        if (
+          resultado.error ||
+          !resultado.code
+        ) {
+          mensagem(
+            "Autorização Amazon não concluída.",
+            "erro"
+          );
+          liberarBotao();
+          return;
+        }
+
+        window.amazon.Login.retrieveToken(
+          resultado.code,
+          function (token) {
+            if (
+              token.error ||
+              !token.success ||
+              !token.access_token
+            ) {
+              mensagem(
+                "Falha no login Amazon.",
+                "erro"
+              );
+              liberarBotao();
+              return;
+            }
+
+            amazonStatus.textContent = "Autorizada";
+
+            solicitarCracha(
+              token.access_token
+            );
+          }
+        );
+      }
+    );
+  });
+
+  const script = document.createElement("script");
+
+  script.id = "amazon-login-sdk";
+  script.async = true;
+  script.src =
+    "https://assets.loginwithamazon.com/sdk/na/login1.js";
+
+  script.onerror = function () {
+    mensagem(
+      "Falha ao carregar o login Amazon.",
+      "erro"
+    );
+  };
+
+  document.getElementById("amazon-root")
+    .appendChild(script);
+
+  setTimeout(function () {
+    if (!amazonPronta) {
+      mensagem(
+        "A Amazon não concluiu a inicialização.",
+        "erro"
+      );
+    }
+  }, 12000);
+})();
+</script>
+
+</body>
+</html>
