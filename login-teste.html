@@ -1,0 +1,184 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Login | Sebastião Porteiro</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: grid;
+    place-items: center;
+    background: #101e1a;
+    color: #f2ebda;
+    font-family: Georgia, serif;
+    padding: 24px;
+  }
+  main {
+    width: 100%;
+    max-width: 420px;
+    text-align: center;
+    border: 1px solid #675b3f;
+    border-radius: 20px;
+    padding: 38px 24px;
+    background: #1b3028;
+  }
+  .icone {
+    color: #c7a66a;
+    font-size: 46px;
+  }
+  h1 {
+    font-size: 29px;
+    font-weight: normal;
+  }
+  p {
+    line-height: 1.6;
+  }
+  button {
+    width: 100%;
+    padding: 16px;
+    margin-top: 20px;
+    background: #c7a66a;
+    color: #101e1a;
+    border: none;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  button:disabled { opacity: .6; }
+  #status {
+    margin-top: 24px;
+    overflow-wrap: anywhere;
+  }
+  .ok { color: #9fdbb1; }
+  .erro { color: #ffabab; }
+  small { color: #c7bfae; }
+</style>
+</head>
+<body>
+
+<div id="amazon-root"></div>
+
+<main>
+  <div class="icone">♜</div>
+  <h1>Sebastião Porteiro™</h1>
+  <p>Laboratório de autenticação</p>
+  <small>Masmorra-Sede™</small>
+
+  <button id="entrar" disabled>
+    Carregando Amazon...
+  </button>
+
+  <div id="status" aria-live="polite">
+    Preparando autenticação.
+  </div>
+</main>
+
+<script>
+const CLIENT_ID =
+  "amzn1.application-oa2-client.b48ae2009d2241679b0a2f8b3f09cb42";
+
+const botao = document.getElementById("entrar");
+const status = document.getElementById("status");
+
+function mensagem(texto, classe = "") {
+  status.textContent = texto;
+  status.className = classe;
+}
+
+function carregarSDK() {
+  const script = document.createElement("script");
+  script.src =
+    "https://assets.loginwithamazon.com/sdk/na/login1.js";
+
+  script.onerror = () => {
+    mensagem(
+      "Não foi possível carregar o Login with Amazon.",
+      "erro"
+    );
+    botao.textContent = "SDK indisponível";
+  };
+
+  document.head.appendChild(script);
+}
+
+window.onAmazonLoginReady = function() {
+  amazon.Login.setClientId(CLIENT_ID);
+
+  botao.disabled = false;
+  botao.textContent = "Entrar com Amazon";
+  mensagem("Pronto para autenticar.");
+};
+
+botao.addEventListener("click", function() {
+  if (!window.amazon?.Login) {
+    mensagem("SDK da Amazon indisponível.", "erro");
+    return;
+  }
+
+  mensagem("Aguardando autorização da Amazon...");
+
+  amazon.Login.authorize(
+    {
+      scope: "profile:user_id",
+      pkce: true,
+      popup: true,
+      interactive: "always"
+    },
+    function(resultado) {
+      if (resultado.error) {
+        mensagem(
+          "Amazon recusou a autorização: " +
+          resultado.error,
+          "erro"
+        );
+        return;
+      }
+
+      if (!resultado.code) {
+        mensagem(
+          "A Amazon não retornou um código de autorização.",
+          "erro"
+        );
+        return;
+      }
+
+      mensagem("Autorizado! Validando o login...");
+
+      amazon.Login.retrieveToken(
+        resultado.code,
+        function(token) {
+          if (
+            token.error ||
+            !token.success ||
+            !token.access_token
+          ) {
+            mensagem(
+              "Não foi possível concluir o login: " +
+              (token.error || "resposta inválida"),
+              "erro"
+            );
+            return;
+          }
+
+          // O token nunca é mostrado na tela
+          // nem enviado ao nosso WebSocket.
+          mensagem(
+            "Login with Amazon concluído com sucesso! " +
+            "A conta foi autenticada no laboratório.",
+            "ok"
+          );
+        }
+      );
+    }
+  );
+});
+
+carregarSDK();
+</script>
+</body>
+</html>
