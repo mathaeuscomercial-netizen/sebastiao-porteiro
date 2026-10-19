@@ -7,6 +7,7 @@
 <title>Login | Sebastião Porteiro</title>
 <style>
   * { box-sizing: border-box; }
+
   body {
     margin: 0;
     min-height: 100vh;
@@ -17,6 +18,7 @@
     font-family: Georgia, serif;
     padding: 24px;
   }
+
   main {
     width: 100%;
     max-width: 420px;
@@ -26,17 +28,19 @@
     padding: 38px 24px;
     background: #1b3028;
   }
+
   .icone {
     color: #c7a66a;
     font-size: 46px;
   }
+
   h1 {
     font-size: 29px;
     font-weight: normal;
   }
-  p {
-    line-height: 1.6;
-  }
+
+  p { line-height: 1.6; }
+
   button {
     width: 100%;
     padding: 16px;
@@ -49,11 +53,25 @@
     font-weight: bold;
     cursor: pointer;
   }
+
   button:disabled { opacity: .6; }
+
   #status {
     margin-top: 24px;
     overflow-wrap: anywhere;
   }
+
+  .id {
+    margin-top: 18px;
+    padding: 14px;
+    border: 1px solid #675b3f;
+    border-radius: 10px;
+    font-family: monospace;
+    font-size: 12px;
+    overflow-wrap: anywhere;
+    user-select: all;
+  }
+
   .ok { color: #9fdbb1; }
   .erro { color: #ffabab; }
   small { color: #c7bfae; }
@@ -66,7 +84,7 @@
 <main>
   <div class="icone">♜</div>
   <h1>Sebastião Porteiro™</h1>
-  <p>Laboratório de autenticação</p>
+  <p>Identificação do administrador</p>
   <small>Masmorra-Sede™</small>
 
   <button id="entrar" disabled>
@@ -76,6 +94,8 @@
   <div id="status" aria-live="polite">
     Preparando autenticação.
   </div>
+
+  <div id="identificacao" class="id" hidden></div>
 </main>
 
 <script>
@@ -84,6 +104,8 @@ const CLIENT_ID =
 
 const botao = document.getElementById("entrar");
 const status = document.getElementById("status");
+const identificacao =
+  document.getElementById("identificacao");
 
 function mensagem(texto, classe = "") {
   status.textContent = texto;
@@ -92,6 +114,7 @@ function mensagem(texto, classe = "") {
 
 function carregarSDK() {
   const script = document.createElement("script");
+
   script.src =
     "https://assets.loginwithamazon.com/sdk/na/login1.js";
 
@@ -110,16 +133,17 @@ window.onAmazonLoginReady = function() {
   amazon.Login.setClientId(CLIENT_ID);
 
   botao.disabled = false;
-  botao.textContent = "Entrar com Amazon";
+  botao.textContent = "Identificar minha conta Amazon";
   mensagem("Pronto para autenticar.");
 };
 
 botao.addEventListener("click", function() {
   if (!window.amazon?.Login) {
-    mensagem("SDK da Amazon indisponível.", "erro");
+    mensagem("SDK indisponível.", "erro");
     return;
   }
 
+  identificacao.hidden = true;
   mensagem("Aguardando autorização da Amazon...");
 
   amazon.Login.authorize(
@@ -132,8 +156,7 @@ botao.addEventListener("click", function() {
     function(resultado) {
       if (resultado.error) {
         mensagem(
-          "Amazon recusou a autorização: " +
-          resultado.error,
+          "Autorização recusada: " + resultado.error,
           "erro"
         );
         return;
@@ -141,13 +164,11 @@ botao.addEventListener("click", function() {
 
       if (!resultado.code) {
         mensagem(
-          "A Amazon não retornou um código de autorização.",
+          "Código de autorização não recebido.",
           "erro"
         );
         return;
       }
-
-      mensagem("Autorizado! Validando o login...");
 
       amazon.Login.retrieveToken(
         resultado.code,
@@ -158,19 +179,36 @@ botao.addEventListener("click", function() {
             !token.access_token
           ) {
             mensagem(
-              "Não foi possível concluir o login: " +
-              (token.error || "resposta inválida"),
+              "Falha ao obter credencial de acesso.",
               "erro"
             );
             return;
           }
 
-          // O token nunca é mostrado na tela
-          // nem enviado ao nosso WebSocket.
-          mensagem(
-            "Login with Amazon concluído com sucesso! " +
-            "A conta foi autenticada no laboratório.",
-            "ok"
+          amazon.Login.retrieveProfile(
+            token.access_token,
+            function(resposta) {
+              if (
+                !resposta.success ||
+                !resposta.profile?.CustomerId
+              ) {
+                mensagem(
+                  "Não foi possível identificar a conta.",
+                  "erro"
+                );
+                return;
+              }
+
+              identificacao.textContent =
+                resposta.profile.CustomerId;
+
+              identificacao.hidden = false;
+
+              mensagem(
+                "Conta Amazon identificada com sucesso!",
+                "ok"
+              );
+            }
           );
         }
       );
