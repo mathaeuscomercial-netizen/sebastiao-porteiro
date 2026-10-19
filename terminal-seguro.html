@@ -2,28 +2,94 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sebastião Porteiro | Laboratório Áudio 12</title>
+<title>Sebastião Porteiro | Áudio 13</title>
 <style>
-:root{color-scheme:dark;--bg:#101e1a;--panel:#1b3028;--gold:#c7a66a;--fg:#f2ebda}
-*{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:Georgia,serif;padding:22px}
-main{max-width:520px;margin:auto;background:var(--panel);border:1px solid #756442;border-radius:24px;padding:28px 20px;text-align:center}
-h1{font-weight:normal}
-.marca{color:var(--gold);letter-spacing:3px}
-button{display:block;width:100%;padding:15px;margin:12px 0;background:var(--gold);color:var(--bg);border:0;border-radius:12px;font-size:16px;font-weight:bold;cursor:pointer}
-button.sec{background:transparent;color:var(--gold);border:1px solid var(--gold)}
-button:disabled{opacity:.5}
-.quadro{background:var(--bg);border:1px solid #536454;border-radius:14px;padding:14px;margin:18px 0}
-.linha{display:flex;justify-content:space-between;gap:12px;border-bottom:1px solid #34483c;padding:9px 0;text-align:left}
-.linha:last-child{border:0}
-.valor{color:var(--gold);text-align:right;overflow-wrap:anywhere}
-#status{margin:20px 0;line-height:1.6}
-.ok{color:#9fdbb1}
-.erro{color:#ffb1ab}
-pre{white-space:pre-wrap;overflow-wrap:anywhere;text-align:left;font:12px/1.6 ui-monospace,monospace;max-height:360px;overflow:auto}
-small{color:var(--gold)}
+:root {
+  color-scheme:dark;
+  --bg:#101e1a;
+  --panel:#1b3028;
+  --gold:#c7a66a;
+  --fg:#f2ebda;
+}
+* { box-sizing:border-box; }
+body {
+  margin:0;
+  padding:22px;
+  background:var(--bg);
+  color:var(--fg);
+  font-family:Georgia,serif;
+}
+main {
+  max-width:520px;
+  margin:auto;
+  padding:28px 20px;
+  text-align:center;
+  border:1px solid #756442;
+  border-radius:24px;
+  background:var(--panel);
+}
+h1 { font-weight:normal; }
+.marca,small { color:var(--gold); }
+.marca { letter-spacing:3px; }
+button {
+  display:block;
+  width:100%;
+  margin:12px 0;
+  padding:15px;
+  border:0;
+  border-radius:12px;
+  background:var(--gold);
+  color:var(--bg);
+  font-size:16px;
+  font-weight:bold;
+  cursor:pointer;
+}
+button.sec {
+  background:transparent;
+  color:var(--gold);
+  border:1px solid var(--gold);
+}
+button:disabled {
+  opacity:.5;
+  cursor:default;
+}
+.quadro {
+  background:var(--bg);
+  border:1px solid #536454;
+  border-radius:14px;
+  padding:14px;
+  margin:18px 0;
+}
+.linha {
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  border-bottom:1px solid #34483c;
+  padding:9px 0;
+  text-align:left;
+}
+.linha:last-child { border:0; }
+.valor {
+  color:var(--gold);
+  text-align:right;
+  overflow-wrap:anywhere;
+}
+#status {
+  margin:20px 0;
+  line-height:1.6;
+}
+.ok { color:#9fdbb1; }
+.erro { color:#ffb1ab; }
+pre {
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+  text-align:left;
+  font:12px/1.6 ui-monospace,monospace;
+  max-height:420px;
+  overflow:auto;
+}
 </style>
 </head>
 <body>
@@ -32,846 +98,1127 @@ small{color:var(--gold)}
 <div style="font-size:46px">🏰</div>
 <p class="marca">MASMORRA-SEDE</p>
 <h1>Sebastião Porteiro™</h1>
-<p>Laboratório 12 • Direções SDP e áudio</p>
+<p>Laboratório 13 • RTP remoto, codecs e DTLS</p>
 
 <button id="entrar" disabled>Carregando Amazon...</button>
 <button id="microfone" class="sec">Preparar microfone</button>
-<button id="reproduzir" class="sec" disabled>Ativar som do celular</button>
+<button id="reproduzir" class="sec" disabled>
+  Ativar som do celular
+</button>
 
 <div id="status">Inicializando...</div>
 
 <div class="quadro">
-<div class="linha"><span>Amazon</span><span class="valor" id="amazonStatus">Aguardando</span></div>
-<div class="linha"><span>Crachá</span><span class="valor" id="crachaStatus">Aguardando</span></div>
-<div class="linha"><span>Central AWS</span><span class="valor" id="wsStatus">Desconectada</span></div>
-<div class="linha"><span>Microfone</span><span class="valor" id="micStatus">Inativo</span></div>
-<div class="linha"><span>WebRTC</span><span class="valor" id="rtcStatus">Aguardando</span></div>
-<div class="linha"><span>Coleta ICE</span><span class="valor" id="iceStatus">Aguardando</span></div>
-<div class="linha"><span>Conexão ICE</span><span class="valor" id="iceConnStatus">Aguardando</span></div>
-<div class="linha"><span>Conexão Peer</span><span class="valor" id="peerConnStatus">Aguardando</span></div>
-<div class="linha"><span>Resposta SDP</span><span class="valor" id="sdpStatus">Aguardando</span></div>
-<div class="linha"><span>Faixa local</span><span class="valor" id="localTrack">Aguardando</span></div>
-<div class="linha"><span>Faixa remota</span><span class="valor" id="remoteTrack">Aguardando</span></div>
-<div class="linha"><span>Reprodução</span><span class="valor" id="playStatus">Aguardando</span></div>
-<div class="linha"><span>RTP enviado</span><span class="valor" id="outRtp">Aguardando</span></div>
-<div class="linha"><span>RTP recebido</span><span class="valor" id="inRtp">Aguardando</span></div>
+  <div class="linha">
+    <span>Amazon</span>
+    <span class="valor" id="amazonStatus">Aguardando</span>
+  </div>
+  <div class="linha">
+    <span>Crachá</span>
+    <span class="valor" id="crachaStatus">Aguardando</span>
+  </div>
+  <div class="linha">
+    <span>Central AWS</span>
+    <span class="valor" id="wsStatus">Desconectada</span>
+  </div>
+  <div class="linha">
+    <span>Microfone</span>
+    <span class="valor" id="micStatus">Inativo</span>
+  </div>
+  <div class="linha">
+    <span>WebRTC</span>
+    <span class="valor" id="rtcStatus">Aguardando</span>
+  </div>
+  <div class="linha">
+    <span>Coleta ICE</span>
+    <span class="valor" id="iceStatus">Aguardando</span>
+  </div>
+  <div class="linha">
+    <span>Conexão ICE</span>
+    <span class="valor" id="iceConnStatus">Aguardando</span>
+  </div>
+  <div class="linha">
+    <span>Conexão Peer</span>
+    <span class="valor" id="peerConnStatus">Aguardando</span>
+  </div>
+  <div class="linha">
+    <span>Resposta SDP</span>
+    <span class="valor" id="sdpStatus">Aguardando</span>
+  </div>
+  <div class="linha">
+    <span>Faixa local</span>
+    <span class="valor" id="localTrack">Aguardando</span>
+  </div>
+  <div class="linha">
+    <span>Faixa remota</span>
+    <span class="valor" id="remoteTrack">Aguardando</span>
+  </div>
+  <div class="linha">
+    <span>Reprodução</span>
+    <span class="valor" id="playStatus">Aguardando</span>
+  </div>
+  <div class="linha">
+    <span>RTP enviado</span>
+    <span class="valor" id="outRtp">Aguardando</span>
+  </div>
+  <div class="linha">
+    <span>RTP recebido</span>
+    <span class="valor" id="inRtp">Aguardando</span>
+  </div>
+  <div class="linha">
+    <span>DTLS</span>
+    <span class="valor" id="dtlsStatus">Aguardando</span>
+  </div>
+  <div class="linha">
+    <span>Estado da sessão</span>
+    <span class="valor" id="sessionStatus">Aguardando</span>
+  </div>
 </div>
 
 <div class="quadro">
-<strong>Eventos, direções SDP e amostras de áudio</strong>
-<pre id="log">Aguardando oferta Alexa.</pre>
+  <strong>Registro seguro Áudio 13</strong>
+  <pre id="log">Aguardando oferta Alexa.</pre>
 </div>
 
-<button id="copiar" class="sec">Copiar diagnóstico Áudio 12</button>
+<button id="copiar" class="sec">
+  Copiar diagnóstico Áudio 13
+</button>
+
 <audio id="audioRemoto" autoplay playsinline></audio>
-<small>SEBASTIÃO SYSTEMS • ÁUDIO 12</small>
+<small>SEBASTIÃO SYSTEMS • ÁUDIO 13</small>
 </main>
 
 <script>
-(()=>{
-'use strict';
+(() => {
+  'use strict';
 
-const CLIENT_ID='amzn1.application-oa2-client.b48ae2009d2241679b0a2f8b3f09cb42';
-const EMISSOR='https://yfy6x3xbsn4ntldhfypaz5gkoa0jgsmy.lambda-url.us-east-1.on.aws/';
-const WS='wss://b0z9d37i01.execute-api.us-east-1.amazonaws.com/dev';
+  const CLIENT_ID =
+    'amzn1.application-oa2-client.b48ae2009d2241679b0a2f8b3f09cb42';
 
-const $=id=>document.getElementById(id);
-let amazonPronta=false,socket=null,pc=null,mic=null,validade=0,geracao=0,inicio=0,logs=[];
+  const EMISSOR =
+    'https://yfy6x3xbsn4ntldhfypaz5gkoa0jgsmy.lambda-url.us-east-1.on.aws/';
 
-const set=(id,v)=>$(id).textContent=String(v);
+  const WS =
+    'wss://b0z9d37i01.execute-api.us-east-1.amazonaws.com/dev';
 
-function mensagem(t,erro=false){
-  set('status',t);
-  $('status').className=erro?'erro':'ok';
-}
+  const $ = id => document.getElementById(id);
 
-function registrar(t,g=geracao){
-  if(g!==geracao)return;
-  const tempo=inicio?((performance.now()-inicio)/1000).toFixed(3):'0.000';
-  logs.push('+'+tempo+'s '+t);
-  if(logs.length>160)logs.shift();
-  set('log',logs.join('\n'));
-}
+  let amazonPronta = false;
+  let socket = null;
+  let pc = null;
+  let mic = null;
+  let validade = 0;
+  let geracao = 0;
+  let inicio = 0;
+  let logs = [];
 
-function resumoMidias(sdp){
-  const secs=(sdp||'').split(/(?=^m=)/m).slice(1);
-  const global=(sdp||'').split(/^m=/m)[0];
-
-  const globalDir=global.match(
-    /^a=(sendrecv|sendonly|recvonly|inactive)$/m
-  )?.[1]||'sendrecv (padrão)';
-
-  return secs.map(sec=>{
-    const linhas=sec.split(/\r?\n/);
-    const m=linhas[0].split(' ');
-
-    const dir=sec.match(
-      /^a=(sendrecv|sendonly|recvonly|inactive)$/m
-    )?.[1]||globalDir;
-
-    const mid=sec.match(
-      /^a=mid:([^\r\n]+)/m
-    )?.[1]||'não informado';
-
-    const codecs=linhas
-      .filter(x=>x.startsWith('a=rtpmap:'))
-      .map(x=>x.replace(/^a=rtpmap:/,'').split(' ')[1])
-      .filter(Boolean)
-      .slice(0,12);
-
-    return {
-      tipo:m[0]?.slice(2),
-      portaZero:m[1]==='0',
-      mid,
-      direcao:dir,
-      codecs
-    };
-  });
-}
-
-function fecharRTC(){
-  if(pc){
-    pc.close();
-    pc=null;
-  }
-
-  const a=$('audioRemoto');
-  a.srcObject=null;
-
-  $('reproduzir').disabled=true;
-  set('reproduzir','Ativar som do celular');
-}
-
-function fecharSocket(){
-  if(socket){
-    const s=socket;
-    socket=null;
-    s.onclose=null;
-    s.close();
-  }
-}
-
-function liberar(){
-  set('entrar','Entrar e conectar');
-  $('entrar').disabled=false;
-}
-
-const trackInfo=t=>t?
-  `${t.readyState}; enabled=${t.enabled}; muted=${t.muted}`:
-  'ausente';
-
-const safeNum=x=>
-  x===undefined||x===null?
-  null:
-  Number.isFinite(Number(x))?Number(x):null;
-
-function audioInfo(r){
-  return {
-    pacotes:safeNum(r.packetsSent??r.packetsReceived),
-    bytes:safeNum(r.bytesSent??r.bytesReceived),
-    nivel:safeNum(r.audioLevel),
-    energia:safeNum(r.totalAudioEnergy),
-    amostras:safeNum(r.totalSamplesDuration),
-    jitter:safeNum(r.jitter),
-    perdidos:safeNum(r.packetsLost)
+  const set = (id, v) => {
+    $(id).textContent = String(v);
   };
-}
 
-async function amostraAudio(c,rotulo,g){
-  if(g!==geracao||c.signalingState==='closed')return;
-
-  try{
-    const stats=await c.getStats();
-
-    const out=[];
-    const inc=[];
-    const sources=[];
-
-    stats.forEach(r=>{
-      const kind=r.kind||r.mediaType;
-
-      if(
-        r.type==='outbound-rtp'&&
-        kind==='audio'&&
-        !r.isRemote
-      ){
-        out.push(audioInfo(r));
-      }
-
-      if(
-        r.type==='inbound-rtp'&&
-        kind==='audio'&&
-        !r.isRemote
-      ){
-        inc.push(audioInfo(r));
-      }
-
-      if(
-        r.type==='media-source'&&
-        kind==='audio'
-      ){
-        sources.push({
-          nivel:safeNum(r.audioLevel),
-          energia:safeNum(r.totalAudioEnergy),
-          amostras:safeNum(r.totalSamplesDuration)
-        });
-      }
-    });
-
-    set(
-      'outRtp',
-      out.length?
-        out.map(x=>
-          `${x.pacotes} pacotes / ${x.bytes} bytes`
-        ).join(' • '):
-        'Sem estatísticas'
-    );
-
-    set(
-      'inRtp',
-      inc.length?
-        inc.map(x=>
-          `${x.pacotes} pacotes / ${x.bytes} bytes`
-        ).join(' • '):
-        'Sem estatísticas'
-    );
-
-    set(
-      'localTrack',
-      trackInfo(mic?.getAudioTracks()[0])
-    );
-
-    set(
-      'remoteTrack',
-      trackInfo(
-        c.getReceivers().find(
-          r=>r.track?.kind==='audio'
-        )?.track
-      )
-    );
-
-    const a=$('audioRemoto');
-
-    registrar(
-      rotulo+' RTP '+JSON.stringify({
-        enviado:out,
-        recebido:inc,
-        fonteLocal:sources,
-        faixaLocal:$('localTrack').textContent,
-        faixaRemota:$('remoteTrack').textContent,
-        reproducao:{
-          paused:a.paused,
-          muted:a.muted,
-          volume:a.volume,
-          readyState:a.readyState,
-          currentTime:Math.round(a.currentTime*10)/10
-        }
-      }),
-      g
-    );
-  }catch(e){
-    registrar(
-      rotulo+' estatísticas indisponíveis: '+e.name,
-      g
-    );
+  function mensagem(texto, erro = false) {
+    set('status', texto);
+    $('status').className = erro ? 'erro' : 'ok';
   }
-}
 
-$('copiar').onclick=async()=>{
-  const ids=[
-    'amazonStatus',
-    'wsStatus',
-    'micStatus',
-    'rtcStatus',
-    'iceStatus',
-    'iceConnStatus',
-    'peerConnStatus',
-    'sdpStatus',
-    'localTrack',
-    'remoteTrack',
-    'playStatus',
-    'outRtp',
-    'inRtp'
-  ];
+  function registrar(texto, g = geracao) {
+    if (g !== geracao) return;
 
-  const txt=
-    'SEBASTIÃO PORTEIRO • ÁUDIO 12\n'+
-    ids.map(id=>
-      id+': '+$(id).textContent
-    ).join('\n')+
-    '\nEventos:\n'+
-    logs.join('\n');
+    const dt = inicio
+      ? ((performance.now() - inicio) / 1000).toFixed(3)
+      : '0.000';
 
-  try{
-    await navigator.clipboard.writeText(txt);
-    mensagem('Diagnóstico Áudio 12 copiado.');
-  }catch{
-    prompt('Copie o relatório:',txt);
-  }
-};
+    logs.push('+' + dt + 's ' + texto);
 
-$('microfone').onclick=async()=>{
-  try{
-    if(!mic){
-      mic=await navigator.mediaDevices.getUserMedia({
-        audio:true,
-        video:false
-      });
+    if (logs.length > 200) {
+      logs.shift();
     }
 
-    set('micStatus','Preparado');
-
-    set(
-      'localTrack',
-      trackInfo(mic.getAudioTracks()[0])
-    );
-
-    $('microfone').disabled=true;
-
-    mensagem('Microfone preparado.');
-  }catch(e){
-    mensagem('Microfone: '+e.message,true);
-  }
-};
-
-$('reproduzir').onclick=async()=>{
-  try{
-    await $('audioRemoto').play();
-
-    set(
-      'playStatus',
-      'play() permitido; paused='+
-      $('audioRemoto').paused
-    );
-
-    set('reproduzir','Som do celular ativado');
-    $('reproduzir').disabled=true;
-
-    registrar('Reprodução liberada por toque');
-  }catch(e){
-    set('playStatus','play() recusado: '+e.name);
-    registrar('Falha ao reproduzir: '+e.name);
-  }
-};
-
-async function esperarICE(c){
-  if(c.iceGatheringState==='complete')return true;
-
-  return new Promise(resolve=>{
-    let done=false;
-
-    const finish=v=>{
-      if(done)return;
-
-      done=true;
-      clearTimeout(timer);
-
-      c.removeEventListener(
-        'icegatheringstatechange',
-        check
-      );
-
-      resolve(v);
-    };
-
-    const check=()=>{
-      set('iceStatus',c.iceGatheringState);
-
-      if(c.iceGatheringState==='complete'){
-        finish(true);
-      }
-    };
-
-    const timer=setTimeout(
-      ()=>finish(false),
-      5000
-    );
-
-    c.addEventListener(
-      'icegatheringstatechange',
-      check
-    );
-
-    check();
-  });
-}
-
-async function oferta(d){
-  fecharRTC();
-
-  const sdp=d?.offer?.value;
-
-  if(
-    d?.offer?.format!=='SDP'||
-    typeof sdp!=='string'||
-    !sdp.startsWith('v=0')||
-    typeof d.sessionId!=='string'
-  ){
-    mensagem('Oferta inválida.',true);
-    return;
+    set('log', logs.join('\n'));
   }
 
-  const g=++geracao;
-  inicio=performance.now();
-  logs=[];
+  function resumoMidias(sdp) {
+    const secs = (sdp || '')
+      .split(/(?=^m=)/m)
+      .slice(1);
 
-  registrar('Oferta Alexa recebida');
+    const global = (sdp || '')
+      .split(/^m=/m)[0];
 
-  [
-    'iceStatus',
-    'iceConnStatus',
-    'peerConnStatus',
-    'sdpStatus',
-    'remoteTrack',
-    'playStatus',
-    'outRtp',
-    'inRtp'
-  ].forEach(id=>set(id,'Iniciando'));
+    const globalDir = global.match(
+      /^a=(sendrecv|sendonly|recvonly|inactive)$/m
+    )?.[1] || 'sendrecv (padrão)';
 
-  try{
-    const c=new RTCPeerConnection({
-      iceServers:[]
+    return secs.map(sec => {
+      const linhas = sec.split(/\r?\n/);
+      const media = linhas[0].split(' ');
+
+      return {
+        tipo: media[0]?.slice(2),
+        portaZero: media[1] === '0',
+        mid: sec.match(
+          /^a=mid:([^\r\n]+)/m
+        )?.[1] || 'não informado',
+        direcao: sec.match(
+          /^a=(sendrecv|sendonly|recvonly|inactive)$/m
+        )?.[1] || globalDir,
+        codecs: linhas
+          .filter(x => x.startsWith('a=rtpmap:'))
+          .map(x =>
+            x.replace(/^a=rtpmap:/, '')
+              .split(' ')[1]
+          )
+          .filter(Boolean)
+          .slice(0, 12)
+      };
     });
+  }
 
-    pc=c;
+  function fecharRTC() {
+    if (pc) {
+      pc.close();
+      pc = null;
+    }
 
-    registrar('Peer criado sem STUN');
+    const audio = $('audioRemoto');
+    audio.pause();
+    audio.srcObject = null;
 
-    c.onicegatheringstatechange=()=>{
-      if(g===geracao){
-        set(
-          'iceStatus',
-          c.iceGatheringState
-        );
+    $('reproduzir').disabled = true;
+    set('reproduzir', 'Ativar som do celular');
+  }
 
-        registrar(
-          'Coleta ICE: '+c.iceGatheringState,
-          g
-        );
-      }
+  function fecharSocket() {
+    if (socket) {
+      const antigo = socket;
+      socket = null;
+      antigo.onclose = null;
+      antigo.close();
+    }
+  }
+
+  function liberar() {
+    set('entrar', 'Entrar e conectar');
+    $('entrar').disabled = false;
+  }
+
+  function trackInfo(track) {
+    if (!track) return 'ausente';
+
+    return (
+      track.readyState +
+      '; enabled=' + track.enabled +
+      '; muted=' + track.muted
+    );
+  }
+
+  function numero(valor) {
+    if (
+      valor === undefined ||
+      valor === null ||
+      !Number.isFinite(Number(valor))
+    ) {
+      return null;
+    }
+
+    return Number(valor);
+  }
+
+  function rtpInfo(item) {
+    return {
+      pacotes: numero(
+        item.packetsSent ?? item.packetsReceived
+      ),
+      bytes: numero(
+        item.bytesSent ?? item.bytesReceived
+      ),
+      nivel: numero(item.audioLevel),
+      energia: numero(item.totalAudioEnergy),
+      amostras: numero(item.totalSamplesDuration),
+      jitter: numero(item.jitter),
+      perdidos: numero(item.packetsLost)
     };
+  }
 
-    c.oniceconnectionstatechange=()=>{
-      if(g===geracao){
-        set(
-          'iceConnStatus',
-          c.iceConnectionState
-        );
+  function codecInfo(codec) {
+    if (!codec) return null;
 
-        registrar(
-          'Conexão ICE: '+c.iceConnectionState,
-          g
-        );
-      }
+    return {
+      mimeType: codec.mimeType || null,
+      clockRate: numero(codec.clockRate),
+      channels: numero(codec.channels)
     };
+  }
 
-    c.onconnectionstatechange=()=>{
-      if(g===geracao){
-        set(
-          'peerConnStatus',
-          c.connectionState
-        );
+  async function amostra(conexao, rotulo, g) {
+    if (
+      g !== geracao ||
+      conexao.signalingState === 'closed'
+    ) {
+      return;
+    }
 
-        registrar(
-          'Conexão Peer: '+c.connectionState,
-          g
-        );
+    try {
+      const stats = await conexao.getStats();
+
+      const enviados = [];
+      const recebidos = [];
+      const remotoEnviados = [];
+      const remotoRecebidos = [];
+      const fontes = [];
+      const transportes = [];
+      const codecIds = new Set();
+
+      stats.forEach(item => {
+        const tipoMidia =
+          item.kind || item.mediaType;
+
+        if (
+          tipoMidia === 'audio' &&
+          item.type === 'outbound-rtp' &&
+          !item.isRemote
+        ) {
+          enviados.push({
+            ...rtpInfo(item),
+            codecId: item.codecId || null
+          });
+
+          if (item.codecId) {
+            codecIds.add(item.codecId);
+          }
+        }
+
+        if (
+          tipoMidia === 'audio' &&
+          item.type === 'inbound-rtp' &&
+          !item.isRemote
+        ) {
+          recebidos.push({
+            ...rtpInfo(item),
+            codecId: item.codecId || null
+          });
+
+          if (item.codecId) {
+            codecIds.add(item.codecId);
+          }
+        }
+
+        if (
+          tipoMidia === 'audio' &&
+          item.type === 'remote-outbound-rtp'
+        ) {
+          remotoEnviados.push({
+            pacotes: numero(item.packetsSent),
+            bytes: numero(item.bytesSent),
+            remoteTimestamp:
+              numero(item.remoteTimestamp),
+            roundTripTime:
+              numero(item.roundTripTime),
+            reportsSent: numero(item.reportsSent)
+          });
+        }
+
+        if (
+          tipoMidia === 'audio' &&
+          item.type === 'remote-inbound-rtp'
+        ) {
+          remotoRecebidos.push({
+            pacotesPerdidos:
+              numero(item.packetsLost),
+            roundTripTime:
+              numero(item.roundTripTime),
+            jitter: numero(item.jitter)
+          });
+        }
+
+        if (
+          tipoMidia === 'audio' &&
+          item.type === 'media-source'
+        ) {
+          fontes.push({
+            nivel: numero(item.audioLevel),
+            energia: numero(item.totalAudioEnergy),
+            amostras:
+              numero(item.totalSamplesDuration)
+          });
+        }
+
+        if (item.type === 'transport') {
+          transportes.push({
+            dtlsState: item.dtlsState || null,
+            iceState: item.iceState || null,
+            srtpCipher: item.srtpCipher || null,
+            selectedCandidatePair:
+              !!item.selectedCandidatePairId
+          });
+        }
+      });
+
+      const codecs = [];
+
+      for (const id of codecIds) {
+        const codec = stats.get(id);
+
+        if (codec) {
+          codecs.push({
+            id,
+            ...codecInfo(codec)
+          });
+        }
       }
-    };
 
-    c.ontrack=e=>{
-      if(g!==geracao)return;
+      const dtls = transportes
+        .map(t => t.dtlsState || 'não informado')
+        .join(', ') || 'sem dados';
 
-      registrar(
-        'Faixa remota recebida: kind='+
-        e.track.kind+'; '+trackInfo(e.track),
-        g
+      set('dtlsStatus', dtls);
+
+      set(
+        'outRtp',
+        enviados.length
+          ? enviados.map(x =>
+              x.pacotes + ' pacotes / ' +
+              x.bytes + ' bytes'
+            ).join(' • ')
+          : 'Sem estatísticas'
       );
 
-      // A faixa de vídeo não substitui o áudio.
-      if(e.track.kind!=='audio'){
-        registrar(
-          'Vídeo ignorado pelo reprodutor de áudio',
-          g
-        );
-        return;
-      }
+      set(
+        'inRtp',
+        recebidos.length
+          ? recebidos.map(x =>
+              x.pacotes + ' pacotes / ' +
+              x.bytes + ' bytes'
+            ).join(' • ')
+          : 'Sem estatísticas'
+      );
 
-      const a=$('audioRemoto');
-
-      a.srcObject=new MediaStream([e.track]);
-      a.muted=false;
-      a.volume=1;
-
-      $('reproduzir').disabled=false;
+      set(
+        'localTrack',
+        trackInfo(mic?.getAudioTracks()[0])
+      );
 
       set(
         'remoteTrack',
-        trackInfo(e.track)
+        trackInfo(
+          conexao.getReceivers().find(
+            r => r.track?.kind === 'audio'
+          )?.track
+        )
       );
 
-      e.track.onunmute=()=>registrar(
-        'Faixa de áudio remota unmute',
+      const audio = $('audioRemoto');
+
+      registrar(
+        rotulo + ' MIDIA ' +
+        JSON.stringify({
+          outbound: enviados,
+          inbound: recebidos,
+          remoteOutbound: remotoEnviados,
+          remoteInbound: remotoRecebidos,
+          codecs,
+          transportes,
+          fonteLocal: fontes,
+          faixaLocal:
+            $('localTrack').textContent,
+          faixaRemota:
+            $('remoteTrack').textContent,
+          reproducao: {
+            paused: audio.paused,
+            muted: audio.muted,
+            volume: audio.volume,
+            readyState: audio.readyState,
+            currentTime:
+              Math.round(audio.currentTime * 10) / 10
+          }
+        }),
         g
       );
 
-      e.track.onmute=()=>registrar(
-        'Faixa de áudio remota mute',
+    } catch (erro) {
+      registrar(
+        rotulo +
+        ' estatísticas indisponíveis: ' +
+        erro.name,
         g
       );
+    }
+  }
 
-      e.track.onended=()=>registrar(
-        'Faixa de áudio remota ended',
-        g
-      );
+  $('copiar').onclick = async () => {
+    const campos = [
+      'amazonStatus',
+      'wsStatus',
+      'micStatus',
+      'rtcStatus',
+      'iceStatus',
+      'iceConnStatus',
+      'peerConnStatus',
+      'sdpStatus',
+      'localTrack',
+      'remoteTrack',
+      'playStatus',
+      'outRtp',
+      'inRtp',
+      'dtlsStatus',
+      'sessionStatus'
+    ];
 
-      a.play()
-        .then(()=>{
-          set(
-            'playStatus',
-            'play() permitido'
-          );
+    const texto =
+      'SEBASTIÃO PORTEIRO • ÁUDIO 13\n' +
+      campos.map(id =>
+        id + ': ' + $(id).textContent
+      ).join('\n') +
+      '\nEventos:\n' +
+      logs.join('\n');
 
-          registrar(
-            'Reprodução de áudio iniciada',
-            g
-          );
-        })
-        .catch(err=>{
-          set(
-            'playStatus',
-            'play() recusado: '+err.name
-          );
+    try {
+      await navigator.clipboard.writeText(texto);
+      mensagem('Diagnóstico Áudio 13 copiado.');
+    } catch {
+      prompt('Copie o relatório:', texto);
+    }
+  };
 
-          registrar(
-            'Reprodução recusada: '+err.name,
-            g
-          );
-        });
-    };
-
-    if(mic){
-      for(const t of mic.getAudioTracks()){
-        c.addTrack(t,mic);
+  $('microfone').onclick = async () => {
+    try {
+      if (!mic) {
+        mic = await navigator.mediaDevices
+          .getUserMedia({
+            audio: true,
+            video: false
+          });
       }
+
+      set('micStatus', 'Preparado');
+
+      set(
+        'localTrack',
+        trackInfo(mic.getAudioTracks()[0])
+      );
+
+      $('microfone').disabled = true;
+      mensagem('Microfone preparado.');
+
+    } catch (erro) {
+      mensagem(
+        'Microfone: ' + erro.message,
+        true
+      );
+    }
+  };
+
+  $('reproduzir').onclick = async () => {
+    try {
+      await $('audioRemoto').play();
+
+      set(
+        'playStatus',
+        'play() permitido; paused=' +
+        $('audioRemoto').paused
+      );
+
+      set('reproduzir', 'Som do celular ativado');
+      $('reproduzir').disabled = true;
+
+      registrar('Reprodução liberada por toque');
+
+    } catch (erro) {
+      set(
+        'playStatus',
+        'play() recusado: ' + erro.name
+      );
+
+      registrar(
+        'Falha ao reproduzir: ' + erro.name
+      );
+    }
+  };
+
+  async function esperarICE(conexao) {
+    if (
+      conexao.iceGatheringState === 'complete'
+    ) {
+      return true;
     }
 
-    registrar(
-      'Faixa local: '+
-      trackInfo(mic?.getAudioTracks()[0]),
-      g
-    );
+    return new Promise(resolve => {
+      let encerrado = false;
+      let timer;
 
-    registrar(
-      'OFERTA mídias: '+
-      JSON.stringify(resumoMidias(sdp)),
-      g
-    );
+      const finalizar = resultado => {
+        if (encerrado) return;
 
-    await c.setRemoteDescription({
-      type:'offer',
-      sdp
+        encerrado = true;
+        clearTimeout(timer);
+
+        conexao.removeEventListener(
+          'icegatheringstatechange',
+          verificar
+        );
+
+        resolve(resultado);
+      };
+
+      const verificar = () => {
+        set(
+          'iceStatus',
+          conexao.iceGatheringState
+        );
+
+        if (
+          conexao.iceGatheringState === 'complete'
+        ) {
+          finalizar(true);
+        }
+      };
+
+      timer = setTimeout(
+        () => finalizar(false),
+        5000
+      );
+
+      conexao.addEventListener(
+        'icegatheringstatechange',
+        verificar
+      );
+
+      verificar();
     });
+  }
 
-    registrar('SDP remoto aplicado',g);
+  async function receberOferta(dados) {
+    fecharRTC();
 
-    const answer=await c.createAnswer();
+    const sdp = dados?.offer?.value;
 
-    await c.setLocalDescription(answer);
+    if (
+      dados?.offer?.format !== 'SDP' ||
+      typeof sdp !== 'string' ||
+      !sdp.startsWith('v=0') ||
+      typeof dados.sessionId !== 'string'
+    ) {
+      mensagem('Oferta inválida.', true);
+      return;
+    }
 
-    registrar(
-      'RESPOSTA mídias: '+
-      JSON.stringify(
-        resumoMidias(c.localDescription?.sdp||'')
-      ),
-      g
+    const g = ++geracao;
+    inicio = performance.now();
+    logs = [];
+
+    registrar('Oferta Alexa recebida');
+
+    [
+      'iceStatus',
+      'iceConnStatus',
+      'peerConnStatus',
+      'sdpStatus',
+      'remoteTrack',
+      'playStatus',
+      'outRtp',
+      'inRtp',
+      'dtlsStatus'
+    ].forEach(id => set(id, 'Iniciando'));
+
+    set(
+      'sessionStatus',
+      'Oferta recebida'
     );
 
-    registrar(
-      'Transceptores: '+
-      JSON.stringify(
-        c.getTransceivers().map(t=>({
-          tipo:t.receiver?.track?.kind,
-          direcaoSolicitada:t.direction,
-          direcaoAtual:
-            t.currentDirection||
-            'ainda não definida'
-        }))
-      ),
-      g
-    );
+    try {
+      const conexao = new RTCPeerConnection({
+        iceServers: []
+      });
 
-    registrar('SDP local criado',g);
+      pc = conexao;
 
-    const completo=await esperarICE(c);
+      registrar('Peer criado sem STUN');
 
-    if(g!==geracao)return;
+      conexao.onicegatheringstatechange = () => {
+        if (g !== geracao) return;
 
-    if(!completo){
+        set(
+          'iceStatus',
+          conexao.iceGatheringState
+        );
+
+        registrar(
+          'Coleta ICE: ' +
+          conexao.iceGatheringState,
+          g
+        );
+      };
+
+      conexao.oniceconnectionstatechange = () => {
+        if (g !== geracao) return;
+
+        set(
+          'iceConnStatus',
+          conexao.iceConnectionState
+        );
+
+        registrar(
+          'Conexão ICE: ' +
+          conexao.iceConnectionState,
+          g
+        );
+      };
+
+      conexao.onconnectionstatechange = () => {
+        if (g !== geracao) return;
+
+        set(
+          'peerConnStatus',
+          conexao.connectionState
+        );
+
+        registrar(
+          'Conexão Peer: ' +
+          conexao.connectionState,
+          g
+        );
+      };
+
+      conexao.ontrack = evento => {
+        if (g !== geracao) return;
+
+        registrar(
+          'Faixa remota: ' +
+          evento.track.kind + '; ' +
+          trackInfo(evento.track),
+          g
+        );
+
+        if (evento.track.kind !== 'audio') {
+          registrar(
+            'Vídeo ignorado no reprodutor',
+            g
+          );
+          return;
+        }
+
+        const audio = $('audioRemoto');
+
+        audio.srcObject =
+          new MediaStream([evento.track]);
+
+        audio.muted = false;
+        audio.volume = 1;
+
+        $('reproduzir').disabled = false;
+
+        set(
+          'remoteTrack',
+          trackInfo(evento.track)
+        );
+
+        evento.track.onunmute = () =>
+          registrar(
+            'Faixa áudio remoto unmute',
+            g
+          );
+
+        evento.track.onmute = () =>
+          registrar(
+            'Faixa áudio remoto mute',
+            g
+          );
+
+        evento.track.onended = () =>
+          registrar(
+            'Faixa áudio remoto ended',
+            g
+          );
+
+        audio.play()
+          .then(() => {
+            set(
+              'playStatus',
+              'play() permitido'
+            );
+
+            registrar(
+              'Reprodução iniciada',
+              g
+            );
+          })
+          .catch(erro => {
+            set(
+              'playStatus',
+              'play() recusado: ' + erro.name
+            );
+
+            registrar(
+              'Reprodução recusada: ' +
+              erro.name,
+              g
+            );
+          });
+      };
+
+      if (mic) {
+        for (
+          const track of mic.getAudioTracks()
+        ) {
+          conexao.addTrack(track, mic);
+        }
+      }
+
+      registrar(
+        'Faixa local: ' +
+        trackInfo(mic?.getAudioTracks()[0]),
+        g
+      );
+
+      registrar(
+        'OFERTA mídias: ' +
+        JSON.stringify(resumoMidias(sdp)),
+        g
+      );
+
+      await conexao.setRemoteDescription({
+        type: 'offer',
+        sdp
+      });
+
+      registrar('SDP remoto aplicado', g);
+
+      const resposta =
+        await conexao.createAnswer();
+
+      await conexao.setLocalDescription(
+        resposta
+      );
+
+      registrar(
+        'RESPOSTA mídias: ' +
+        JSON.stringify(
+          resumoMidias(
+            conexao.localDescription?.sdp || ''
+          )
+        ),
+        g
+      );
+
+      registrar(
+        'Transceptores: ' +
+        JSON.stringify(
+          conexao.getTransceivers().map(t => ({
+            tipo: t.receiver?.track?.kind,
+            direcao: t.direction,
+            atual:
+              t.currentDirection || 'indefinida'
+          }))
+        ),
+        g
+      );
+
+      const completo =
+        await esperarICE(conexao);
+
+      if (g !== geracao) return;
+
+      if (!completo) {
+        set(
+          'rtcStatus',
+          'ICE não concluiu em 5 s'
+        );
+
+        mensagem(
+          'ICE incompleto: SDP não enviado.',
+          true
+        );
+
+        return;
+      }
+
+      const final =
+        conexao.localDescription?.sdp || '';
+
+      const candidatos = (
+        final.match(/^a=candidate:/gm) || []
+      ).length;
+
+      if (
+        !final.startsWith('v=0') ||
+        !candidatos
+      ) {
+        throw Error('SDP sem candidatos');
+      }
+
+      if (
+        socket?.readyState !== WebSocket.OPEN
+      ) {
+        throw Error('WebSocket desconectado');
+      }
+
+      socket.send(JSON.stringify({
+        action: 'webrtc_answer',
+        sessionId: dados.sessionId,
+        answer: {
+          format: 'SDP',
+          value: final
+        }
+      }));
+
+      set(
+        'sdpStatus',
+        'Enviado: ' +
+        candidatos + ' candidatos'
+      );
+
       set(
         'rtcStatus',
-        'ICE não concluiu em 5 s'
+        'Resposta enviada à AWS'
+      );
+
+      set(
+        'sessionStatus',
+        'SDP enviado; aguardando encerramento'
+      );
+
+      registrar(
+        'SDP enviado à AWS; candidatos=' +
+        candidatos,
+        g
       );
 
       mensagem(
-        'ICE incompleto: SDP não enviado.',
+        'Resposta enviada. Medindo áudio RTP e DTLS.'
+      );
+
+      [3000, 8000, 15000, 25000].forEach(
+        ms => setTimeout(
+          () => amostra(
+            conexao,
+            (ms / 1000) + 's',
+            g
+          ),
+          ms
+        )
+      );
+
+    } catch (erro) {
+      if (g !== geracao) return;
+
+      set('rtcStatus', 'Falha WebRTC');
+
+      registrar(
+        'Erro WebRTC: ' + erro.name,
+        g
+      );
+
+      mensagem(
+        'Erro: ' + erro.message,
         true
       );
 
-      return;
-    }
-
-    const final=c.localDescription?.sdp||'';
-
-    const candidatos=(
-      final.match(/^a=candidate:/gm)||[]
-    ).length;
-
-    if(!final.startsWith('v=0')||!candidatos){
-      throw Error('SDP sem candidatos');
-    }
-
-    if(socket?.readyState!==WebSocket.OPEN){
-      throw Error('WebSocket desconectado');
-    }
-
-    socket.send(JSON.stringify({
-      action:'webrtc_answer',
-      sessionId:d.sessionId,
-      answer:{
-        format:'SDP',
-        value:final
+      if (
+        socket?.readyState === WebSocket.OPEN
+      ) {
+        socket.send(JSON.stringify({
+          action: 'webrtc_error',
+          sessionId: dados.sessionId,
+          message: 'Falha na negociacao WebRTC'
+        }));
       }
-    }));
-
-    set(
-      'sdpStatus',
-      'Enviado: '+candidatos+' candidatos'
-    );
-
-    set(
-      'rtcStatus',
-      'Resposta enviada à AWS'
-    );
-
-    registrar(
-      'SDP enviado à AWS; candidatos='+candidatos,
-      g
-    );
-
-    mensagem(
-      'Resposta enviada. Medindo áudio RTP.'
-    );
-
-    [3000,8000,15000].forEach(ms=>
-      setTimeout(
-        ()=>amostraAudio(
-          c,
-          (ms/1000)+'s',
-          g
-        ),
-        ms
-      )
-    );
-  }catch(e){
-    if(g!==geracao)return;
-
-    set('rtcStatus','Falha WebRTC');
-
-    registrar(
-      'Erro WebRTC: '+e.name,
-      g
-    );
-
-    mensagem(
-      'Erro: '+e.message,
-      true
-    );
-
-    if(socket?.readyState===WebSocket.OPEN){
-      socket.send(JSON.stringify({
-        action:'webrtc_error',
-        sessionId:d.sessionId,
-        message:'Falha na negociacao WebRTC'
-      }));
     }
   }
-}
 
-function conectar(token){
-  if(!token||Date.now()>=validade){
-    mensagem('Crachá expirado.',true);
-    liberar();
-    return;
-  }
-
-  fecharSocket();
-  fecharRTC();
-
-  set('wsStatus','Conectando...');
-
-  socket=new WebSocket(
-    WS+'?token='+encodeURIComponent(token)
-  );
-
-  socket.onopen=()=>{
-    set('wsStatus','Conectada');
-
-    mensagem(
-      'Terminal autenticado. Aguardando Alexa.'
-    );
-
-    socket.send(JSON.stringify({
-      action:'teste',
-      origem:'terminal-seguro'
-    }));
-
-    liberar();
-  };
-
-  socket.onmessage=e=>{
-    let d;
-
-    try{
-      d=JSON.parse(e.data);
-    }catch{
-      return;
-    }
-
-    if(d.action==='webrtc_offer'){
-      oferta(d);
-      return;
-    }
-
-    registrar(
-      'Mensagem AWS: '+
-      String(d.action||'mensagem').slice(0,40)
-    );
-  };
-
-  socket.onerror=()=>{
-    set('wsStatus','Falha');
-
-    mensagem('WebSocket recusado.',true);
-
-    liberar();
-  };
-
-  socket.onclose=()=>{
-    set('wsStatus','Desconectada');
-    fecharRTC();
-  };
-}
-
-async function solicitarCracha(accessToken){
-  try{
-    mensagem(
-      'AWS verificando identidade Amazon...'
-    );
-
-    const r=await fetch(EMISSOR,{
-      method:'POST',
-      headers:{
-        'Content-Type':'application/json'
-      },
-      body:JSON.stringify({
-        access_token:accessToken
-      }),
-      cache:'no-store'
-    });
-
-    const d=await r.json();
-
-    if(!r.ok){
-      throw Error(
-        d.erro||'Emissor recusou login'
-      );
-    }
-
-    if(
-      typeof d.token!=='string'||
-      d.expiresIn!==300||
-      d.terminalId!=='celular-teste'
-    ){
-      throw Error(
-        'Resposta inesperada da AWS'
-      );
-    }
-
-    validade=Date.now()+300000;
-
-    set(
-      'crachaStatus',
-      'Emitido: 5 min'
-    );
-
-    conectar(d.token);
-  }catch(e){
-    set('crachaStatus','Falha');
-
-    mensagem(e.message,true);
-    liberar();
-  }
-}
-
-window.onAmazonLoginReady=()=>{
-  try{
-    window.amazon.Login.setClientId(
-      CLIENT_ID
-    );
-
-    amazonPronta=true;
-    liberar();
-
-    mensagem('Pronto para autenticar.');
-  }catch{
-    mensagem(
-      'Falha ao inicializar Amazon.',
-      true
-    );
-  }
-};
-
-$('entrar').onclick=()=>{
-  if(!amazonPronta)return;
-
-  $('entrar').disabled=true;
-
-  fecharSocket();
-  fecharRTC();
-
-  set('amazonStatus','Autenticando');
-  set('crachaStatus','Aguardando');
-  set('wsStatus','Desconectada');
-
-  mensagem('Aguardando login Amazon...');
-
-  window.amazon.Login.authorize({
-    scope:'profile:user_id',
-    pkce:true,
-    popup:true,
-    interactive:'always'
-  },result=>{
-    if(result.error||!result.code){
-      mensagem(
-        'Login Amazon não concluído.',
-        true
-      );
-
+  function conectar(token) {
+    if (
+      !token ||
+      Date.now() >= validade
+    ) {
+      mensagem('Crachá expirado.', true);
       liberar();
       return;
     }
 
-    window.amazon.Login.retrieveToken(
-      result.code,
-      t=>{
-        if(
-          t.error||
-          !t.success||
-          !t.access_token
-        ){
+    fecharSocket();
+    fecharRTC();
+
+    set('wsStatus', 'Conectando...');
+
+    socket = new WebSocket(
+      WS +
+      '?token=' +
+      encodeURIComponent(token)
+    );
+
+    socket.onopen = () => {
+      set('wsStatus', 'Conectada');
+
+      mensagem(
+        'Terminal autenticado. Aguardando Alexa.'
+      );
+
+      socket.send(JSON.stringify({
+        action: 'teste',
+        origem: 'terminal-seguro'
+      }));
+
+      liberar();
+    };
+
+    socket.onmessage = evento => {
+      let dados;
+
+      try {
+        dados = JSON.parse(evento.data);
+      } catch {
+        return;
+      }
+
+      if (dados.action === 'webrtc_offer') {
+        receberOferta(dados);
+        return;
+      }
+
+      if (
+        /disconnect|ended|terminate|close/i
+          .test(String(dados.action || ''))
+      ) {
+        set(
+          'sessionStatus',
+          'Aviso AWS: ' +
+          String(dados.action).slice(0, 50)
+        );
+
+        registrar(
+          'Aviso de encerramento recebido via WebSocket'
+        );
+
+      } else {
+        registrar(
+          'Mensagem AWS: ' +
+          String(
+            dados.action || 'mensagem'
+          ).slice(0, 40)
+        );
+      }
+    };
+
+    socket.onerror = () => {
+      set('wsStatus', 'Falha');
+
+      mensagem(
+        'WebSocket recusado.',
+        true
+      );
+
+      liberar();
+    };
+
+    socket.onclose = () => {
+      set('wsStatus', 'Desconectada');
+      set('sessionStatus', 'WebSocket encerrado');
+
+      registrar('WebSocket encerrado');
+
+      fecharRTC();
+    };
+  }
+
+  async function solicitarCracha(accessToken) {
+    try {
+      mensagem(
+        'AWS verificando identidade Amazon...'
+      );
+
+      const resposta = await fetch(
+        EMISSOR,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            access_token: accessToken
+          }),
+          cache: 'no-store'
+        }
+      );
+
+      const dados = await resposta.json();
+
+      if (!resposta.ok) {
+        throw Error(
+          dados.erro || 'Emissor recusou login'
+        );
+      }
+
+      if (
+        typeof dados.token !== 'string' ||
+        dados.expiresIn !== 300 ||
+        dados.terminalId !== 'celular-teste'
+      ) {
+        throw Error(
+          'Resposta inesperada da AWS'
+        );
+      }
+
+      validade = Date.now() + 300000;
+
+      set('crachaStatus', 'Emitido: 5 min');
+
+      conectar(dados.token);
+
+    } catch (erro) {
+      set('crachaStatus', 'Falha');
+
+      mensagem(erro.message, true);
+      liberar();
+    }
+  }
+
+  window.onAmazonLoginReady = () => {
+    try {
+      window.amazon.Login.setClientId(
+        CLIENT_ID
+      );
+
+      amazonPronta = true;
+      liberar();
+
+      mensagem('Pronto para autenticar.');
+
+    } catch {
+      mensagem(
+        'Falha ao inicializar Amazon.',
+        true
+      );
+    }
+  };
+
+  $('entrar').onclick = () => {
+    if (!amazonPronta) return;
+
+    $('entrar').disabled = true;
+
+    fecharSocket();
+    fecharRTC();
+
+    set('amazonStatus', 'Autenticando');
+    set('crachaStatus', 'Aguardando');
+    set('wsStatus', 'Desconectada');
+
+    mensagem('Aguardando login Amazon...');
+
+    window.amazon.Login.authorize(
+      {
+        scope: 'profile:user_id',
+        pkce: true,
+        popup: true,
+        interactive: 'always'
+      },
+      resultado => {
+        if (
+          resultado.error ||
+          !resultado.code
+        ) {
           mensagem(
-            'Falha no token Amazon.',
+            'Login Amazon não concluído.',
             true
           );
 
@@ -879,37 +1226,57 @@ $('entrar').onclick=()=>{
           return;
         }
 
-        set('amazonStatus','Autorizada');
+        window.amazon.Login.retrieveToken(
+          resultado.code,
+          token => {
+            if (
+              token.error ||
+              !token.success ||
+              !token.access_token
+            ) {
+              mensagem(
+                'Falha no token Amazon.',
+                true
+              );
 
-        solicitarCracha(t.access_token);
+              liberar();
+              return;
+            }
+
+            set('amazonStatus', 'Autorizada');
+
+            solicitarCracha(
+              token.access_token
+            );
+          }
+        );
       }
     );
-  });
-};
+  };
 
-const sdk=document.createElement('script');
+  const sdk = document.createElement('script');
 
-sdk.async=true;
+  sdk.async = true;
 
-sdk.src=
-  'https://assets.loginwithamazon.com/sdk/na/login1.js';
+  sdk.src =
+    'https://assets.loginwithamazon.com/sdk/na/login1.js';
 
-sdk.onerror=()=>mensagem(
-  'Falha ao carregar Amazon.',
-  true
-);
-
-$('amazon-root').appendChild(sdk);
-
-setTimeout(()=>{
-  if(!amazonPronta){
+  sdk.onerror = () =>
     mensagem(
-      'Amazon não inicializou.',
+      'Falha ao carregar Amazon.',
       true
     );
-  }
-},12000);
 
+  $('amazon-root').appendChild(sdk);
+
+  setTimeout(() => {
+    if (!amazonPronta) {
+      mensagem(
+        'Amazon não inicializou.',
+        true
+      );
+    }
+  }, 12000);
 })();
 </script>
 </body>
