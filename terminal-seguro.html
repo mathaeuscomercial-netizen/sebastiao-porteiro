@@ -4,179 +4,297 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sebastião Porteiro | Laboratório 08</title>
+<title>Sebastião Porteiro | Laboratório ICE 10</title>
+
 <style>
 :root {
-  color-scheme:dark;
-  --fundo:#101e1a;
-  --painel:#1b3028;
-  --ouro:#c7a66a;
-  --texto:#f2ebda;
+  color-scheme: dark;
+  --fundo: #101e1a;
+  --painel: #1b3028;
+  --ouro: #c7a66a;
+  --texto: #f2ebda;
 }
-* { box-sizing:border-box }
+
+* { box-sizing: border-box; }
+
 body {
-  margin:0; min-height:100vh;
-  display:grid; place-items:center;
-  background:var(--fundo);color:var(--texto);
-  font-family:Georgia,serif;padding:22px;
+  margin: 0;
+  min-height: 100vh;
+  background: var(--fundo);
+  color: var(--texto);
+  font-family: Georgia, serif;
+  padding: 22px;
 }
+
 main {
-  width:100%;max-width:460px;
-  padding:32px 22px;text-align:center;
-  background:var(--painel);
-  border:1px solid #756442;border-radius:24px;
+  width: 100%;
+  max-width: 460px;
+  margin: 0 auto;
+  padding: 32px 22px;
+  text-align: center;
+  background: var(--painel);
+  border: 1px solid #756442;
+  border-radius: 24px;
 }
-.marca {color:var(--ouro);letter-spacing:3px}
-h1 {font-weight:normal;font-size:34px}
-p {line-height:1.6}
+
+.marca {
+  color: var(--ouro);
+  letter-spacing: 3px;
+}
+
+h1 {
+  font-weight: normal;
+  font-size: 34px;
+}
+
+p { line-height: 1.6; }
+
 button {
-  width:100%;padding:16px;margin-top:14px;
-  background:var(--ouro);color:var(--fundo);
-  border:0;border-radius:12px;
-  font-size:16px;font-weight:bold;
+  width: 100%;
+  padding: 16px;
+  margin-top: 14px;
+  background: var(--ouro);
+  color: var(--fundo);
+  border: 0;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
 }
+
 button.sec {
-  color:var(--ouro);background:transparent;
-  border:1px solid var(--ouro);
+  color: var(--ouro);
+  background: transparent;
+  border: 1px solid var(--ouro);
 }
-button:disabled {opacity:.55}
+
+button:disabled { opacity: .55; }
+
 .quadro {
-  background:var(--fundo);padding:16px;
-  margin-top:22px;border-radius:14px;
-  border:1px solid #536454;
+  background: var(--fundo);
+  padding: 16px;
+  margin-top: 22px;
+  border-radius: 14px;
+  border: 1px solid #536454;
 }
+
 .linha {
-  display:flex;justify-content:space-between;
-  gap:14px;padding:10px 0;
-  border-bottom:1px solid #34483c;
-  text-align:left;
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid #34483c;
+  text-align: left;
 }
-.linha:last-child {border:0}
+
+.linha:last-child { border: 0; }
+
 .valor {
-  color:var(--ouro);
-  text-align:right;overflow-wrap:anywhere;
+  color: var(--ouro);
+  text-align: right;
+  overflow-wrap: anywhere;
 }
-#status {margin:24px 0;line-height:1.6}
-.ok {color:#9fdbb1}
-.erro {color:#ffb1ab}
-small {display:block;margin-top:24px;color:var(--ouro)}
-audio {display:none}
-.diagnostico {font:13px/1.6 ui-monospace,monospace;text-align:left;white-space:pre-wrap;overflow-wrap:anywhere;max-height:280px;overflow:auto}
-#copiarDiagnostico {margin-top:10px}
+
+#status {
+  margin: 24px 0;
+  line-height: 1.6;
+}
+
+.ok { color: #9fdbb1; }
+.erro { color: #ffb1ab; }
+
+small {
+  display: block;
+  margin-top: 24px;
+  color: var(--ouro);
+}
+
+audio { display: none; }
+
+.diagnostico {
+  font: 13px/1.6 ui-monospace, monospace;
+  text-align: left;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 350px;
+  overflow: auto;
+}
 </style>
-<script id="ice09-instrumentation">
-(()=>{
- 'use strict';
- if(window.__ice09) return;
- const Native=window.RTCPeerConnection, t0=()=>performance.now();
- const history=[],peers=[]; let id=0;
- const add=(msg,peer=null)=>{const time=new Date().toLocaleTimeString('pt-BR',{hour12:false});const item={at:time,dt:peer?((t0()-peer.start)/1000).toFixed(3)+'s':'-',msg};history.push(item);if(history.length>180)history.shift();render();};
- const safeCandidates=s=>{const lines=(s||'').split(/\r?\n/);const c=lines.filter(x=>x.startsWith('a=candidate:'));const kinds={};let ip4=0;for(const l of c){const m=l.match(/ typ (host|srflx|relay|prflx)/);const kind=m?.[1]||'other';kinds[kind]=(kinds[kind]||0)+1;const addr=l.split(' ')[4];if(/^\d{1,3}(\.\d{1,3}){3}$/.test(addr||''))ip4++;}return {total:c.length,ipv4:ip4,tipos:kinds,withEnd:lines.some(x=>x.trim()==='a=end-of-candidates')};};
- const summarySDP=s=>{const txt=s||'';return {media:(txt.match(/^m=/gm)||[]).length, bundle:/^a=group:BUNDLE/m.test(txt),iceLite:/^a=ice-lite/m.test(txt),rtcpMux:/^a=rtcp-mux/m.test(txt),sdp:safeCandidates(txt)};};
- let area, logs;
- function render(){if(!area){area=document.getElementById('ice09-panel');logs=document.getElementById('ice09-log');}if(logs)logs.textContent=history.map(x=>x.at+' +'+x.dt+' '+x.msg).join('\n');}
- async function getStats(peer,label){try{const stats=await peer.pc.getStats();const counts={};const pairs=[];stats.forEach(r=>{if(['local-candidate','remote-candidate'].includes(r.type)){const k=r.type+'/'+(r.candidateType||'unknown');counts[k]=(counts[k]||0)+1;}if(r.type==='candidate-pair'&&(['succeeded','failed','in-progress'].includes(r.state))){pairs.push({state:r.state,nominated:!!r.nominated,selected:!!r.selected,bytesSent:r.bytesSent||0,bytesReceived:r.bytesReceived||0});}});add(label+' stats '+JSON.stringify({counts,pairs:pairs.slice(0,12)}),peer);}catch(e){add(label+' stats indisponíveis: '+e.name,peer);}}
- class ObservedPeer extends Native{
- constructor(config,...rest){super(config,...rest);const peer={pc:this,start:t0(),id:++id,iceErr:0,cand:0};peers.push(peer);add('Peer #'+id+' criado; iceTransportPolicy='+(config?.iceTransportPolicy||'all')+'; iceServers='+((config?.iceServers||[]).map(x=>(x.urls||[]).toString().replace(/\?.*/,''))).join(';'),peer);
- this.addEventListener('icegatheringstatechange',()=>{add('Coleta ICE: '+this.iceGatheringState,peer);if(this.iceGatheringState==='complete')add('SDP local final: '+JSON.stringify(safeCandidates(this.localDescription?.sdp)),peer);});
- this.addEventListener('iceconnectionstatechange',()=>add('Conexão ICE: '+this.iceConnectionState,peer));
- this.addEventListener('connectionstatechange',()=>add('Conexão Peer: '+this.connectionState,peer));
- this.addEventListener('signalingstatechange',()=>add('Sinalização: '+this.signalingState,peer));
- this.addEventListener('icecandidate',e=>{if(e.candidate){peer.cand++;if(peer.cand<=3||peer.cand%5===0)add('Candidato local #'+peer.cand+' tipo='+(e.candidate.type||'outro')+' protocolo='+(e.candidate.protocol||'outro')+' IPv4='+(/^\d{1,3}(\.\d{1,3}){3}$/.test(e.candidate.address||'')),peer);}else add('Evento ICE: candidato nulo (fim de coleta)',peer);});
- this.addEventListener('icecandidateerror',e=>{peer.iceErr++;add('ERRO STUN/TURN #'+peer.iceErr+' código='+(e.errorCode||'?')+' texto='+(e.errorText||'indisponível').slice(0,100),peer);});
- setTimeout(()=>{if(this.signalingState!=='closed'){add('MARCO 5s: '+JSON.stringify({gather:this.iceGatheringState,ice:this.iceConnectionState,pc:this.connectionState,candidates:peer.cand,errors:peer.iceErr,sdp:safeCandidates(this.localDescription?.sdp)}),peer);getStats(peer,'5s');}},5000);
- setTimeout(()=>{if(this.signalingState!=='closed'){add('MARCO 15s: '+JSON.stringify({gather:this.iceGatheringState,ice:this.iceConnectionState,pc:this.connectionState,candidates:peer.cand,errors:peer.iceErr,sdp:safeCandidates(this.localDescription?.sdp)}),peer);getStats(peer,'15s');}},15000);
- }
- async setRemoteDescription(d){const p=peers.find(x=>x.pc===this);add('SDP remoto (sem dados sensíveis): '+JSON.stringify(summarySDP(d?.sdp)),p);return super.setRemoteDescription(d);}
- async setLocalDescription(d){const p=peers.find(x=>x.pc===this);add('setLocalDescription: '+d?.type,p);return super.setLocalDescription(d);}
- }
- window.RTCPeerConnection=ObservedPeer;
- function mount(){if(document.getElementById('ice09-panel'))return;const el=document.createElement('section');el.id='ice09-panel';el.style.cssText='max-width:720px;width:100%;margin:24px auto;padding:18px;background:#182b24;color:#f2ebda;border:1px solid #c7a66a;border-radius:16px;font:14px system-ui';el.innerHTML='<h2 style="color:#c7a66a;font-size:20px">Laboratório ICE 09 • Detalhamento</h2><p>Use o Terminal normalmente. Aguarde 16 segundos após a oferta e copie somente o relatório sanitizado.</p><button id="ice09-copy" style="padding:12px;background:#c7a66a;color:#101e1a;border:0;border-radius:8px;width:100%">Copiar diagnóstico ICE 09</button><pre id="ice09-log" style="overflow-wrap:anywhere;white-space:pre-wrap;max-height:350px;overflow:auto;text-align:left"></pre>';document.body.appendChild(el);area=el;logs=document.getElementById('ice09-log');document.getElementById('ice09-copy').addEventListener('click',async()=>{const txt='SEBASTIÃO PORTEIRO • ICE 09\n'+history.map(x=>x.at+' +'+x.dt+' '+x.msg).join('\n');try{await navigator.clipboard.writeText(txt);add('Diagnóstico copiado.');}catch{const input=document.createElement('textarea');input.value=txt;document.body.appendChild(input);input.select();document.execCommand('copy');input.remove();add('Diagnóstico copiado via fallback.');}});render();}
- document.addEventListener('DOMContentLoaded',mount);
- window.__ice09={history};
-})();
-</script>
 </head>
+
 <body>
 
 <div id="amazon-root"></div>
 
 <main>
   <div style="font-size:48px">🏰</div>
+
   <p class="marca">MASMORRA-SEDE</p>
+
   <h1>Sebastião Porteiro™</h1>
-  <p>Diagnóstico de áudio WebRTC</p>
 
-  <button id="entrar" disabled>Carregando Amazon...</button>
-  <button id="microfone" class="sec">Preparar microfone</button>
+  <p>Laboratório ICE 10 • Teste sem STUN</p>
 
-  <div id="status">Inicializando...</div>
+  <button id="entrar" disabled>
+    Carregando Amazon...
+  </button>
+
+  <button id="microfone" class="sec">
+    Preparar microfone
+  </button>
+
+  <div id="status">
+    Inicializando...
+  </div>
 
   <div class="quadro">
     <div class="linha">
       <span>Conta Amazon</span>
-      <span class="valor" id="amazonStatus">Aguardando</span>
+      <span class="valor" id="amazonStatus">
+        Aguardando
+      </span>
     </div>
+
     <div class="linha">
       <span>Crachá</span>
-      <span class="valor" id="crachaStatus">Aguardando</span>
+      <span class="valor" id="crachaStatus">
+        Aguardando
+      </span>
     </div>
+
     <div class="linha">
       <span>Central AWS</span>
-      <span class="valor" id="wsStatus">Desconectada</span>
+      <span class="valor" id="wsStatus">
+        Desconectada
+      </span>
     </div>
+
     <div class="linha">
       <span>Microfone</span>
-      <span class="valor" id="micStatus">Inativo</span>
+      <span class="valor" id="micStatus">
+        Inativo
+      </span>
     </div>
+
     <div class="linha">
       <span>WebRTC</span>
-      <span class="valor" id="rtcStatus">Aguardando</span>
+      <span class="valor" id="rtcStatus">
+        Aguardando
+      </span>
     </div>
+
     <div class="linha">
       <span>Trickle ICE</span>
-      <span class="valor" id="trickleStatus">Não verificado</span>
+      <span class="valor" id="trickleStatus">
+        Não verificado
+      </span>
     </div>
+
     <div class="linha">
-      <span>Coleta ICE (gathering)</span>
-      <span class="valor" id="iceStatus">Não iniciado</span>
+      <span>Coleta ICE</span>
+      <span class="valor" id="iceStatus">
+        Não iniciado
+      </span>
     </div>
-    <div class="linha"><span>Conexão ICE</span><span class="valor" id="iceConnStatus">Não iniciado</span></div>
-    <div class="linha"><span>Conexão Peer</span><span class="valor" id="peerConnStatus">Não iniciado</span></div>
-    <div class="linha"><span>setRemoteDescription</span><span class="valor" id="remotoTempo">Aguardando</span></div>
-    <div class="linha"><span>createAnswer</span><span class="valor" id="answerTempo">Aguardando</span></div>
-    <div class="linha"><span>setLocalDescription</span><span class="valor" id="localTempo">Aguardando</span></div>
-    <div class="linha"><span>ICE após o limite</span><span class="valor" id="iceTardio">Aguardando</span></div>
+
+    <div class="linha">
+      <span>Conexão ICE</span>
+      <span class="valor" id="iceConnStatus">
+        Não iniciado
+      </span>
+    </div>
+
+    <div class="linha">
+      <span>Conexão Peer</span>
+      <span class="valor" id="peerConnStatus">
+        Não iniciado
+      </span>
+    </div>
+
+    <div class="linha">
+      <span>setRemoteDescription</span>
+      <span class="valor" id="remotoTempo">
+        Aguardando
+      </span>
+    </div>
+
+    <div class="linha">
+      <span>createAnswer</span>
+      <span class="valor" id="answerTempo">
+        Aguardando
+      </span>
+    </div>
+
+    <div class="linha">
+      <span>setLocalDescription</span>
+      <span class="valor" id="localTempo">
+        Aguardando
+      </span>
+    </div>
+
+    <div class="linha">
+      <span>ICE após o limite</span>
+      <span class="valor" id="iceTardio">
+        Aguardando
+      </span>
+    </div>
+
     <div class="linha">
       <span>Candidatos totais</span>
       <span class="valor" id="totalStatus">0</span>
     </div>
+
     <div class="linha">
       <span>Candidatos IPv4</span>
       <span class="valor" id="ipv4Status">0</span>
     </div>
+
     <div class="linha">
       <span>Tipos ICE</span>
-      <span class="valor" id="tiposStatus">Nenhum</span>
+      <span class="valor" id="tiposStatus">
+        Nenhum
+      </span>
     </div>
+
     <div class="linha">
       <span>Tempo</span>
-      <span class="valor" id="tempoStatus">0 s</span>
+      <span class="valor" id="tempoStatus">
+        0 s
+      </span>
     </div>
+
     <div class="linha">
       <span>Resposta SDP</span>
-      <span class="valor" id="sdpStatus">Não gerada</span>
+      <span class="valor" id="sdpStatus">
+        Não gerada
+      </span>
     </div>
+
     <div class="linha">
       <span>Último evento</span>
-      <span class="valor" id="eventoStatus">Nenhum</span>
+      <span class="valor" id="eventoStatus">
+        Nenhum
+      </span>
     </div>
   </div>
 
-  <div class="quadro"><strong>Registro seguro de eventos</strong><div class="diagnostico" id="logICE">Aguardando oferta Alexa.</div></div>
-  <button class="sec" id="copiarDiagnostico" type="button">Copiar diagnóstico ICE 08</button>
+  <div class="quadro">
+    <strong>Registro seguro ICE 10</strong>
+
+    <div class="diagnostico" id="logICE">
+      Aguardando oferta Alexa.
+    </div>
+  </div>
+
+  <button class="sec" id="copiarDiagnostico" type="button">
+    Copiar diagnóstico ICE 10
+  </button>
+
   <audio id="audioRemoto" autoplay playsinline></audio>
-  <small>SEBASTIÃO SYSTEMS • LABORATÓRIO 08</small>
+
+  <small>
+    SEBASTIÃO SYSTEMS • LABORATÓRIO ICE 10
+  </small>
 </main>
 
 <script>
@@ -201,21 +319,12 @@ audio {display:none}
   let pc = null;
   let microfone = null;
   let validade = 0;
+
   let registrosICE = [];
   let inicioICE = 0;
   let geracaoICE = 0;
-  function registrarICE(texto, geracao) {
-    if (geracao !== geracaoICE) return;
-    const delta = inicioICE ? ((performance.now() - inicioICE)/1000).toFixed(3) : "0.000";
-    registrosICE.push(delta + "s " + texto);
-    $("logICE").textContent = registrosICE.join("\n");
-  }
-  $("copiarDiagnostico").onclick = async () => {
-    const campos = ["amazonStatus", "wsStatus", "micStatus", "rtcStatus", "trickleStatus", "iceStatus", "iceConnStatus", "peerConnStatus", "remotoTempo", "answerTempo", "localTempo", "iceTardio", "totalStatus", "ipv4Status", "tiposStatus", "tempoStatus", "sdpStatus"];
-    const texto = "Sebastião Porteiro - Laboratório ICE 08\n" + campos.map(id => id+": "+$(id).textContent).join("\n") + "\nEventos:\n" + registrosICE.join("\n");
-    try { await navigator.clipboard.writeText(texto); mensagem("Diagnóstico seguro copiado.", "ok"); }
-    catch { window.prompt("Copie o diagnóstico abaixo:", texto); }
-  };
+  let contagemCandidatos = 0;
+  let contagemErros = 0;
 
   function mensagem(texto, tipo = "") {
     $("status").textContent = texto;
@@ -227,20 +336,27 @@ audio {display:none}
     $("entrar").textContent = "Entrar e conectar";
   }
 
-  function fecharRTC() {
-    if (pc) {
-      pc.close();
-      pc = null;
-    }
-  }
+  function registrarICE(texto, geracao = geracaoICE) {
+    if (geracao !== geracaoICE) return;
 
-  function fecharSocket() {
-    if (socket) {
-      const antigo = socket;
-      socket = null;
-      antigo.onclose = null;
-      antigo.close();
+    const delta = inicioICE
+      ? ((performance.now() - inicioICE) / 1000).toFixed(3)
+      : "0.000";
+
+    const horario = new Date().toLocaleTimeString(
+      "pt-BR",
+      { hour12: false }
+    );
+
+    registrosICE.push(
+      horario + " +" + delta + "s " + texto
+    );
+
+    if (registrosICE.length > 180) {
+      registrosICE.shift();
     }
+
+    $("logICE").textContent = registrosICE.join("\n");
   }
 
   function tipoCandidato(c) {
@@ -267,20 +383,206 @@ audio {display:none}
     return (sdp.match(/^a=candidate:/gm) || []).length;
   }
 
+  function resumoSDP(sdp) {
+    const texto = sdp || "";
+    const linhas = texto.split(/\r?\n/);
+
+    const candidatos = linhas.filter(
+      linha => linha.startsWith("a=candidate:")
+    );
+
+    const tipos = {};
+    let ipv4 = 0;
+
+    for (const linha of candidatos) {
+      const tipo =
+        linha.match(/ typ (host|srflx|relay|prflx)/)?.[1] ||
+        "outro";
+
+      tipos[tipo] = (tipos[tipo] || 0) + 1;
+
+      const endereco = linha.split(" ")[4];
+
+      if (
+        /^\d{1,3}(\.\d{1,3}){3}$/.test(endereco || "")
+      ) {
+        ipv4++;
+      }
+    }
+
+    return {
+      total: candidatos.length,
+      ipv4,
+      tipos,
+      withEnd: linhas.some(
+        linha => linha.trim() === "a=end-of-candidates"
+      )
+    };
+  }
+
+  function resumoOferta(sdp) {
+    return {
+      media: (sdp.match(/^m=/gm) || []).length,
+      bundle: /^a=group:BUNDLE/m.test(sdp),
+      iceLite: /^a=ice-lite/m.test(sdp),
+      rtcpMux: /^a=rtcp-mux/m.test(sdp),
+      sdp: resumoSDP(sdp)
+    };
+  }
+
+  function fecharRTC() {
+    if (pc) {
+      pc.close();
+      pc = null;
+    }
+  }
+
+  function fecharSocket() {
+    if (socket) {
+      const antigo = socket;
+      socket = null;
+      antigo.onclose = null;
+      antigo.close();
+    }
+  }
+
+  async function registrarStats(conexao, titulo, geracao) {
+    if (geracao !== geracaoICE) return;
+
+    try {
+      const stats = await conexao.getStats();
+
+      const counts = {};
+      const pairs = [];
+
+      stats.forEach(item => {
+        if (
+          item.type === "local-candidate" ||
+          item.type === "remote-candidate"
+        ) {
+          const chave =
+            item.type + "/" +
+            (item.candidateType || "unknown");
+
+          counts[chave] = (counts[chave] || 0) + 1;
+        }
+
+        if (
+          item.type === "candidate-pair" &&
+          (
+            item.state === "succeeded" ||
+            item.state === "failed" ||
+            item.state === "in-progress"
+          )
+        ) {
+          pairs.push({
+            state: item.state,
+            nominated: !!item.nominated,
+            selected: !!item.selected,
+            bytesSent: item.bytesSent || 0,
+            bytesReceived: item.bytesReceived || 0
+          });
+        }
+      });
+
+      registrarICE(
+        titulo + " stats " +
+        JSON.stringify({
+          counts,
+          pairs: pairs.slice(0, 12)
+        }),
+        geracao
+      );
+    } catch (erro) {
+      registrarICE(
+        titulo + " stats indisponíveis: " + erro.name,
+        geracao
+      );
+    }
+  }
+
+  function registrarMarco(conexao, titulo, geracao) {
+    if (geracao !== geracaoICE) return;
+
+    if (conexao.signalingState === "closed") return;
+
+    registrarICE(
+      titulo + ": " +
+      JSON.stringify({
+        gather: conexao.iceGatheringState,
+        ice: conexao.iceConnectionState,
+        pc: conexao.connectionState,
+        candidates: contagemCandidatos,
+        errors: contagemErros,
+        sdp: resumoSDP(
+          conexao.localDescription?.sdp || ""
+        )
+      }),
+      geracao
+    );
+
+    registrarStats(conexao, titulo, geracao);
+  }
+
+  $("copiarDiagnostico").onclick = async () => {
+    const campos = [
+      "amazonStatus",
+      "wsStatus",
+      "micStatus",
+      "rtcStatus",
+      "trickleStatus",
+      "iceStatus",
+      "iceConnStatus",
+      "peerConnStatus",
+      "remotoTempo",
+      "answerTempo",
+      "localTempo",
+      "iceTardio",
+      "totalStatus",
+      "ipv4Status",
+      "tiposStatus",
+      "tempoStatus",
+      "sdpStatus"
+    ];
+
+    const texto =
+      "SEBASTIÃO PORTEIRO • ICE 10\n" +
+      campos.map(id =>
+        id + ": " + $(id).textContent
+      ).join("\n") +
+      "\nEventos:\n" +
+      registrosICE.join("\n");
+
+    try {
+      await navigator.clipboard.writeText(texto);
+      mensagem("Diagnóstico ICE 10 copiado.", "ok");
+    } catch {
+      window.prompt(
+        "Copie o diagnóstico abaixo:",
+        texto
+      );
+    }
+  };
+
   $("microfone").onclick = async () => {
     try {
       if (!microfone) {
         microfone = await navigator.mediaDevices.getUserMedia({
-          audio:true,
-          video:false
+          audio: true,
+          video: false
         });
       }
+
       $("micStatus").textContent = "Preparado";
       $("microfone").textContent = "Microfone preparado";
       $("microfone").disabled = true;
+
       mensagem("Microfone pronto.", "ok");
     } catch (erro) {
-      mensagem("Microfone: " + erro.message, "erro");
+      mensagem(
+        "Microfone: " + erro.message,
+        "erro"
+      );
     }
   };
 
@@ -296,16 +598,21 @@ audio {display:none}
 
       function finalizar(completo) {
         if (encerrado) return;
+
         encerrado = true;
 
         clearInterval(intervalo);
         clearTimeout(limite);
+
         conexao.removeEventListener(
-          "icegatheringstatechange", verificar
+          "icegatheringstatechange",
+          verificar
         );
 
         $("tempoStatus").textContent =
-          ((performance.now() - inicio) / 1000).toFixed(1) + " s";
+          (
+            (performance.now() - inicio) / 1000
+          ).toFixed(1) + " s";
 
         resolve(completo);
       }
@@ -314,14 +621,18 @@ audio {display:none}
         $("iceStatus").textContent =
           conexao.iceGatheringState;
 
-        if (conexao.iceGatheringState === "complete") {
+        if (
+          conexao.iceGatheringState === "complete"
+        ) {
           finalizar(true);
         }
       }
 
       intervalo = setInterval(() => {
         $("tempoStatus").textContent =
-          ((performance.now() - inicio) / 1000).toFixed(1) + " s";
+          (
+            (performance.now() - inicio) / 1000
+          ).toFixed(1) + " s";
       }, 200);
 
       limite = setTimeout(
@@ -330,7 +641,8 @@ audio {display:none}
       );
 
       conexao.addEventListener(
-        "icegatheringstatechange", verificar
+        "icegatheringstatechange",
+        verificar
       );
 
       verificar();
@@ -352,7 +664,9 @@ audio {display:none}
       return;
     }
 
-    $("eventoStatus").textContent = "Oferta Alexa recebida";
+    $("eventoStatus").textContent =
+      "Oferta Alexa recebida";
+
     $("rtcStatus").textContent = "Negociando";
     $("sdpStatus").textContent = "Não gerada";
     $("iceStatus").textContent = "Iniciando";
@@ -361,16 +675,37 @@ audio {display:none}
     $("ipv4Status").textContent = "0";
     $("tiposStatus").textContent = "Nenhum";
     $("tempoStatus").textContent = "0 s";
-    $("iceConnStatus").textContent = "Não iniciado";
-    $("peerConnStatus").textContent = "Não iniciado";
-    $("remotoTempo").textContent = "Aguardando";
-    $("answerTempo").textContent = "Aguardando";
-    $("localTempo").textContent = "Aguardando";
-    $("iceTardio").textContent = "Aguardando";
+
+    $("iceConnStatus").textContent =
+      "Não iniciado";
+
+    $("peerConnStatus").textContent =
+      "Não iniciado";
+
+    $("remotoTempo").textContent =
+      "Aguardando";
+
+    $("answerTempo").textContent =
+      "Aguardando";
+
+    $("localTempo").textContent =
+      "Aguardando";
+
+    $("iceTardio").textContent =
+      "Aguardando";
+
     registrosICE = [];
+    contagemCandidatos = 0;
+    contagemErros = 0;
+
     inicioICE = performance.now();
+
     const geracao = ++geracaoICE;
-    registrarICE("Oferta Alexa recebida; diagnóstico iniciado", geracao);
+
+    registrarICE(
+      "Oferta Alexa recebida; diagnóstico iniciado",
+      geracao
+    );
 
     let total = 0;
     let ipv4 = 0;
@@ -379,123 +714,304 @@ audio {display:none}
     const inicio = performance.now();
 
     try {
+      // LABORATÓRIO ICE 10:
+      // Sem servidores STUN/TURN neste teste.
       const conexao = new RTCPeerConnection({
-        iceServers: [{
-          urls:"stun:stun.l.google.com:19302"
-        }]
+        iceServers: []
       });
 
       pc = conexao;
 
+      registrarICE(
+        "Peer criado; iceTransportPolicy=all; iceServers=nenhum",
+        geracao
+      );
+
+      registrarICE(
+        "SDP remoto (sem dados sensíveis): " +
+        JSON.stringify(resumoOferta(oferta)),
+        geracao
+      );
+
       conexao.onicecandidate = evento => {
-        if (!evento.candidate) return;
+        if (geracao !== geracaoICE) return;
 
-        total++;
-        if (total === 1) registrarICE("Primeiro candidato ICE", geracao);
-        $("totalStatus").textContent = String(total);
-
-        if (enderecoIPv4(evento.candidate)) {
-          ipv4++;
-          $("ipv4Status").textContent = String(ipv4);
+        if (!evento.candidate) {
+          registrarICE(
+            "Evento ICE: candidato nulo (fim de coleta)",
+            geracao
+          );
+          return;
         }
 
-        const tipo = tipoCandidato(evento.candidate);
+        total++;
+        contagemCandidatos++;
+
+        if (total === 1) {
+          registrarICE(
+            "Primeiro candidato ICE",
+            geracao
+          );
+        }
+
+        $("totalStatus").textContent =
+          String(total);
+
+        const candidato = evento.candidate;
+
+        const temIPv4 = enderecoIPv4(candidato);
+
+        if (temIPv4) {
+          ipv4++;
+          $("ipv4Status").textContent =
+            String(ipv4);
+        }
+
+        const tipo = tipoCandidato(candidato);
+
         tipos[tipo] = (tipos[tipo] || 0) + 1;
 
         $("tiposStatus").textContent =
           Object.entries(tipos)
             .map(([t, n]) => t + ": " + n)
             .join(" / ");
+
+        if (total <= 3 || total % 5 === 0) {
+          registrarICE(
+            "Candidato local #" + total +
+            " tipo=" + tipo +
+            " protocolo=" +
+            (candidato.protocol || "outro") +
+            " IPv4=" + temIPv4,
+            geracao
+          );
+        }
+      };
+
+      conexao.onicecandidateerror = evento => {
+        if (geracao !== geracaoICE) return;
+
+        contagemErros++;
+
+        registrarICE(
+          "ERRO STUN/TURN #" + contagemErros +
+          " código=" + (evento.errorCode || "?") +
+          " texto=" +
+          (evento.errorText || "indisponível")
+            .slice(0, 100),
+          geracao
+        );
       };
 
       conexao.onicegatheringstatechange = () => {
         if (geracao !== geracaoICE) return;
-        $("iceStatus").textContent = conexao.iceGatheringState;
-        registrarICE("Coleta ICE: " + conexao.iceGatheringState, geracao);
-        if (conexao.iceGatheringState === "complete") {
-          $("iceTardio").textContent = ((performance.now() - inicioICE)/1000).toFixed(2) + "s (concluído)";
+
+        const estado = conexao.iceGatheringState;
+
+        $("iceStatus").textContent = estado;
+
+        registrarICE(
+          "Coleta ICE: " + estado,
+          geracao
+        );
+
+        if (estado === "complete") {
+          const segundos =
+            (
+              (performance.now() - inicioICE) / 1000
+            ).toFixed(3);
+
+          $("iceTardio").textContent =
+            segundos + "s (concluído)";
+
+          registrarICE(
+            "SDP local final: " +
+            JSON.stringify(
+              resumoSDP(
+                conexao.localDescription?.sdp || ""
+              )
+            ),
+            geracao
+          );
         }
       };
+
       conexao.oniceconnectionstatechange = () => {
         if (geracao !== geracaoICE) return;
-        $("iceConnStatus").textContent = conexao.iceConnectionState;
-        registrarICE("Conexão ICE: " + conexao.iceConnectionState, geracao);
+
+        $("iceConnStatus").textContent =
+          conexao.iceConnectionState;
+
+        registrarICE(
+          "Conexão ICE: " +
+          conexao.iceConnectionState,
+          geracao
+        );
       };
+
       conexao.onconnectionstatechange = () => {
         if (geracao !== geracaoICE) return;
-        $("peerConnStatus").textContent = conexao.connectionState;
-        registrarICE("Conexão Peer: " + conexao.connectionState, geracao);
+
+        $("peerConnStatus").textContent =
+          conexao.connectionState;
+
+        registrarICE(
+          "Conexão Peer: " +
+          conexao.connectionState,
+          geracao
+        );
+      };
+
+      conexao.onsignalingstatechange = () => {
+        if (geracao !== geracaoICE) return;
+
+        registrarICE(
+          "Sinalização: " +
+          conexao.signalingState,
+          geracao
+        );
       };
 
       conexao.ontrack = evento => {
         const audio = $("audioRemoto");
-        audio.srcObject = evento.streams?.[0] ||
+
+        audio.srcObject =
+          evento.streams?.[0] ||
           new MediaStream([evento.track]);
+
         audio.play().catch(() => {});
       };
 
       if (microfone) {
-        for (const track of microfone.getAudioTracks()) {
+        for (
+          const track of microfone.getAudioTracks()
+        ) {
           conexao.addTrack(track, microfone);
         }
       }
 
+      setTimeout(() => {
+        registrarMarco(
+          conexao,
+          "MARCO 5s",
+          geracao
+        );
+      }, 5000);
+
+      setTimeout(() => {
+        registrarMarco(
+          conexao,
+          "MARCO 15s",
+          geracao
+        );
+      }, 15000);
+
       await conexao.setRemoteDescription({
-        type:"offer",
-        sdp:oferta
+        type: "offer",
+        sdp: oferta
       });
 
-      $("remotoTempo").textContent = ((performance.now()-inicioICE)/1000).toFixed(3) + "s";
-      registrarICE("setRemoteDescription concluído", geracao);
-      const trickle = conexao.canTrickleIceCandidates;
+      $("remotoTempo").textContent =
+        (
+          (performance.now() - inicioICE) / 1000
+        ).toFixed(3) + "s";
+
+      registrarICE(
+        "setRemoteDescription concluído",
+        geracao
+      );
+
+      const trickle =
+        conexao.canTrickleIceCandidates;
 
       $("trickleStatus").textContent =
-        trickle === true ? "Sim (oferta)" :
-        trickle === false ? "Não (oferta)" :
-        "Não informado";
+        trickle === true
+          ? "Sim (oferta)"
+          : trickle === false
+            ? "Não (oferta)"
+            : "Não informado";
 
       const resposta = await conexao.createAnswer();
-      $("answerTempo").textContent = ((performance.now()-inicioICE)/1000).toFixed(3) + "s";
-      registrarICE("createAnswer concluído", geracao);
+
+      $("answerTempo").textContent =
+        (
+          (performance.now() - inicioICE) / 1000
+        ).toFixed(3) + "s";
+
+      registrarICE(
+        "createAnswer concluído",
+        geracao
+      );
+
       await conexao.setLocalDescription(resposta);
-      $("localTempo").textContent = ((performance.now()-inicioICE)/1000).toFixed(3) + "s";
-      registrarICE("setLocalDescription concluído", geracao);
 
-      $("sdpStatus").textContent = "Gerada inicialmente";
+      $("localTempo").textContent =
+        (
+          (performance.now() - inicioICE) / 1000
+        ).toFixed(3) + "s";
 
-      const completo = await esperarICE(conexao, inicio);
+      registrarICE(
+        "setLocalDescription concluído",
+        geracao
+      );
 
-      const sdpFinal = conexao.localDescription?.sdp || "";
-      const incorporados = candidatosDoSDP(sdpFinal);
+      $("sdpStatus").textContent =
+        "Gerada inicialmente";
+
+      const completo =
+        await esperarICE(conexao, inicio);
+
+      if (geracao !== geracaoICE) return;
+
+      const sdpFinal =
+        conexao.localDescription?.sdp || "";
+
+      const incorporados =
+        candidatosDoSDP(sdpFinal);
+
       const segundos =
-        ((performance.now() - inicio) / 1000).toFixed(1);
+        (
+          (performance.now() - inicio) / 1000
+        ).toFixed(1);
 
       if (!completo) {
-        registrarICE("Limite de 5 segundos: gathering=" + conexao.iceGatheringState + ", iceConnection=" + conexao.iceConnectionState, geracao);
-        $("iceTardio").textContent = "Observando após 5 s";
-        // Preservamos o estado real da coleta no campo próprio.
-        // O listener continua ativo para detectar conclusão tardia.
+        registrarICE(
+          "Limite de 5 segundos: gathering=" +
+          conexao.iceGatheringState +
+          ", iceConnection=" +
+          conexao.iceConnectionState,
+          geracao
+        );
+
+        $("iceTardio").textContent =
+          "Observando após 5 s";
 
         $("sdpStatus").textContent =
-          "Parcial: " + incorporados + " candidatos";
+          "Parcial: " +
+          incorporados +
+          " candidatos";
 
-        $("rtcStatus").textContent = "Resposta não enviada (limite ICE)";
+        $("rtcStatus").textContent =
+          "Resposta não enviada (limite ICE)";
 
         mensagem(
-          "ICE ainda coletando após " + segundos +
-          " s. Encontrados: " + total +
-          " candidatos, sendo " + ipv4 +
+          "ICE ainda coletando após " +
+          segundos +
+          " s. Encontrados: " +
+          total +
+          " candidatos, sendo " +
+          ipv4 +
           " IPv4. Incorporados no SDP: " +
-          incorporados + ". Resposta não enviada.",
+          incorporados +
+          ". Resposta não enviada.",
           "erro"
         );
 
-        // A Alexa não suporta Trickle ICE.
-        // Não enviamos SDP parcial como resposta final.
         return;
       }
 
-      $("iceStatus").textContent = "Concluída";
+      $("iceStatus").textContent =
+        "Concluída";
 
       if (
         !sdpFinal.startsWith("v=0") ||
@@ -506,45 +1022,68 @@ audio {display:none}
         );
       }
 
-      if (socket?.readyState !== WebSocket.OPEN) {
-        throw new Error("WebSocket desconectado.");
+      if (
+        socket?.readyState !== WebSocket.OPEN
+      ) {
+        throw new Error(
+          "WebSocket desconectado."
+        );
       }
 
       socket.send(JSON.stringify({
-        action:"webrtc_answer",
-        sessionId:dados.sessionId,
-        answer:{
-          format:"SDP",
-          value:sdpFinal
+        action: "webrtc_answer",
+        sessionId: dados.sessionId,
+        answer: {
+          format: "SDP",
+          value: sdpFinal
         }
       }));
 
       $("sdpStatus").textContent =
-        "Enviada: " + incorporados + " candidatos";
+        "Enviada: " +
+        incorporados +
+        " candidatos";
 
       $("rtcStatus").textContent =
         "Resposta enviada à AWS";
 
+      registrarICE(
+        "Resposta SDP enviada ao WebSocket",
+        geracao
+      );
+
       mensagem(
         "Resposta SDP completa enviada à AWS em " +
-        segundos + " segundos.",
+        segundos +
+        " segundos.",
         "ok"
       );
 
     } catch (erro) {
-      $("rtcStatus").textContent = "Falha WebRTC";
+      if (geracao !== geracaoICE) return;
+
+      $("rtcStatus").textContent =
+        "Falha WebRTC";
+
       $("sdpStatus").textContent = "Falha";
+
+      registrarICE(
+        "Falha WebRTC: " + erro.name,
+        geracao
+      );
 
       mensagem(
         "Erro: " + erro.message,
         "erro"
       );
 
-      if (socket?.readyState === WebSocket.OPEN) {
+      if (
+        socket?.readyState === WebSocket.OPEN
+      ) {
         socket.send(JSON.stringify({
-          action:"webrtc_error",
-          sessionId:dados.sessionId,
-          message:"Falha na negociacao WebRTC"
+          action: "webrtc_error",
+          sessionId: dados.sessionId,
+          message: "Falha na negociacao WebRTC"
         }));
       }
     }
@@ -560,7 +1099,8 @@ audio {display:none}
     fecharSocket();
     fecharRTC();
 
-    $("wsStatus").textContent = "Conectando...";
+    $("wsStatus").textContent =
+      "Conectando...";
 
     socket = new WebSocket(
       WS + "?token=" + encodeURIComponent(token)
@@ -568,11 +1108,15 @@ audio {display:none}
 
     socket.onopen = () => {
       $("wsStatus").textContent = "Conectada";
-      mensagem("Terminal autenticado. Aguardando Alexa.", "ok");
+
+      mensagem(
+        "Terminal autenticado. Aguardando Alexa.",
+        "ok"
+      );
 
       socket.send(JSON.stringify({
-        action:"teste",
-        origem:"terminal-seguro"
+        action: "teste",
+        origem: "terminal-seguro"
       }));
 
       liberar();
@@ -601,35 +1145,47 @@ audio {display:none}
 
     socket.onerror = () => {
       $("wsStatus").textContent = "Falha";
-      mensagem("Conexão WebSocket recusada.", "erro");
+
+      mensagem(
+        "Conexão WebSocket recusada.",
+        "erro"
+      );
+
       liberar();
     };
 
     socket.onclose = () => {
-      $("wsStatus").textContent = "Desconectada";
+      $("wsStatus").textContent =
+        "Desconectada";
+
       fecharRTC();
     };
   }
 
   async function solicitarCracha(accessToken) {
     try {
-      mensagem("AWS verificando identidade Amazon...");
+      mensagem(
+        "AWS verificando identidade Amazon..."
+      );
 
       const resposta = await fetch(EMISSOR, {
-        method:"POST",
-        headers:{
-          "Content-Type":"application/json"
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
         },
-        body:JSON.stringify({
-          access_token:accessToken
+        body: JSON.stringify({
+          access_token: accessToken
         }),
-        cache:"no-store"
+        cache: "no-store"
       });
 
       const dados = await resposta.json();
 
       if (!resposta.ok) {
-        throw new Error(dados.erro || "Emissor recusou login.");
+        throw new Error(
+          dados.erro ||
+          "Emissor recusou login."
+        );
       }
 
       if (
@@ -637,29 +1193,46 @@ audio {display:none}
         dados.expiresIn !== 300 ||
         dados.terminalId !== "celular-teste"
       ) {
-        throw new Error("Resposta inesperada da AWS.");
+        throw new Error(
+          "Resposta inesperada da AWS."
+        );
       }
 
       validade = Date.now() + 300000;
-      $("crachaStatus").textContent = "Emitido: 5 min";
+
+      $("crachaStatus").textContent =
+        "Emitido: 5 min";
 
       conectar(dados.token);
 
     } catch (erro) {
       $("crachaStatus").textContent = "Falha";
-      mensagem(erro.message, "erro");
+
+      mensagem(
+        erro.message,
+        "erro"
+      );
+
       liberar();
     }
   }
 
   window.onAmazonLoginReady = function () {
     try {
-      window.amazon.Login.setClientId(CLIENT_ID);
+      window.amazon.Login.setClientId(
+        CLIENT_ID
+      );
+
       amazonPronta = true;
       liberar();
+
       mensagem("Pronto para autenticar.");
+
     } catch {
-      mensagem("Falha ao inicializar Amazon.", "erro");
+      mensagem(
+        "Falha ao inicializar Amazon.",
+        "erro"
+      );
     }
   };
 
@@ -667,22 +1240,39 @@ audio {display:none}
     if (!amazonPronta) return;
 
     $("entrar").disabled = true;
+
     fecharSocket();
     fecharRTC();
 
-    $("amazonStatus").textContent = "Autenticando";
-    $("crachaStatus").textContent = "Aguardando";
-    $("wsStatus").textContent = "Desconectada";
-    mensagem("Aguardando login Amazon...");
+    $("amazonStatus").textContent =
+      "Autenticando";
+
+    $("crachaStatus").textContent =
+      "Aguardando";
+
+    $("wsStatus").textContent =
+      "Desconectada";
+
+    mensagem(
+      "Aguardando login Amazon..."
+    );
 
     window.amazon.Login.authorize({
-      scope:"profile:user_id",
-      pkce:true,
-      popup:true,
-      interactive:"always"
+      scope: "profile:user_id",
+      pkce: true,
+      popup: true,
+      interactive: "always"
     }, resultado => {
-      if (resultado.error || !resultado.code) {
-        mensagem("Login Amazon não concluído.", "erro");
+
+      if (
+        resultado.error ||
+        !resultado.code
+      ) {
+        mensagem(
+          "Login Amazon não concluído.",
+          "erro"
+        );
+
         liberar();
         return;
       }
@@ -695,35 +1285,55 @@ audio {display:none}
             !token.success ||
             !token.access_token
           ) {
-            mensagem("Falha no token Amazon.", "erro");
+            mensagem(
+              "Falha no token Amazon.",
+              "erro"
+            );
+
             liberar();
             return;
           }
 
-          $("amazonStatus").textContent = "Autorizada";
-          solicitarCracha(token.access_token);
+          $("amazonStatus").textContent =
+            "Autorizada";
+
+          solicitarCracha(
+            token.access_token
+          );
         }
       );
     });
   };
 
-  const sdk = document.createElement("script");
+  const sdk = document.createElement(
+    "script"
+  );
+
   sdk.async = true;
+
   sdk.src =
     "https://assets.loginwithamazon.com/sdk/na/login1.js";
 
   sdk.onerror = () => {
-    mensagem("Falha ao carregar Amazon.", "erro");
+    mensagem(
+      "Falha ao carregar Amazon.",
+      "erro"
+    );
   };
 
   $("amazon-root").appendChild(sdk);
 
   setTimeout(() => {
     if (!amazonPronta) {
-      mensagem("Amazon não inicializou.", "erro");
+      mensagem(
+        "Amazon não inicializou.",
+        "erro"
+      );
     }
   }, 12000);
+
 })();
 </script>
+
 </body>
 </html>
