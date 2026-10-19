@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sebastião Porteiro | Laboratório 06</title>
+<title>Sebastião Porteiro | Laboratório 08</title>
 <style>
 :root {
   color-scheme:dark;
@@ -61,6 +61,8 @@ button:disabled {opacity:.55}
 .erro {color:#ffb1ab}
 small {display:block;margin-top:24px;color:var(--ouro)}
 audio {display:none}
+.diagnostico {font:13px/1.6 ui-monospace,monospace;text-align:left;white-space:pre-wrap;overflow-wrap:anywhere;max-height:280px;overflow:auto}
+#copiarDiagnostico {margin-top:10px}
 </style>
 </head>
 <body>
@@ -104,9 +106,15 @@ audio {display:none}
       <span class="valor" id="trickleStatus">Não verificado</span>
     </div>
     <div class="linha">
-      <span>Estado ICE</span>
+      <span>Coleta ICE (gathering)</span>
       <span class="valor" id="iceStatus">Não iniciado</span>
     </div>
+    <div class="linha"><span>Conexão ICE</span><span class="valor" id="iceConnStatus">Não iniciado</span></div>
+    <div class="linha"><span>Conexão Peer</span><span class="valor" id="peerConnStatus">Não iniciado</span></div>
+    <div class="linha"><span>setRemoteDescription</span><span class="valor" id="remotoTempo">Aguardando</span></div>
+    <div class="linha"><span>createAnswer</span><span class="valor" id="answerTempo">Aguardando</span></div>
+    <div class="linha"><span>setLocalDescription</span><span class="valor" id="localTempo">Aguardando</span></div>
+    <div class="linha"><span>ICE após o limite</span><span class="valor" id="iceTardio">Aguardando</span></div>
     <div class="linha">
       <span>Candidatos totais</span>
       <span class="valor" id="totalStatus">0</span>
@@ -133,8 +141,10 @@ audio {display:none}
     </div>
   </div>
 
+  <div class="quadro"><strong>Registro seguro de eventos</strong><div class="diagnostico" id="logICE">Aguardando oferta Alexa.</div></div>
+  <button class="sec" id="copiarDiagnostico" type="button">Copiar diagnóstico ICE 08</button>
   <audio id="audioRemoto" autoplay playsinline></audio>
-  <small>SEBASTIÃO SYSTEMS • LABORATÓRIO 06</small>
+  <small>SEBASTIÃO SYSTEMS • LABORATÓRIO 08</small>
 </main>
 
 <script>
@@ -159,6 +169,21 @@ audio {display:none}
   let pc = null;
   let microfone = null;
   let validade = 0;
+  let registrosICE = [];
+  let inicioICE = 0;
+  let geracaoICE = 0;
+  function registrarICE(texto, geracao) {
+    if (geracao !== geracaoICE) return;
+    const delta = inicioICE ? ((performance.now() - inicioICE)/1000).toFixed(3) : "0.000";
+    registrosICE.push(delta + "s " + texto);
+    $("logICE").textContent = registrosICE.join("\n");
+  }
+  $("copiarDiagnostico").onclick = async () => {
+    const campos = ["amazonStatus", "wsStatus", "micStatus", "rtcStatus", "trickleStatus", "iceStatus", "iceConnStatus", "peerConnStatus", "remotoTempo", "answerTempo", "localTempo", "iceTardio", "totalStatus", "ipv4Status", "tiposStatus", "tempoStatus", "sdpStatus"];
+    const texto = "Sebastião Porteiro - Laboratório ICE 08\n" + campos.map(id => id+": "+$(id).textContent).join("\n") + "\nEventos:\n" + registrosICE.join("\n");
+    try { await navigator.clipboard.writeText(texto); mensagem("Diagnóstico seguro copiado.", "ok"); }
+    catch { window.prompt("Copie o diagnóstico abaixo:", texto); }
+  };
 
   function mensagem(texto, tipo = "") {
     $("status").textContent = texto;
@@ -304,6 +329,16 @@ audio {display:none}
     $("ipv4Status").textContent = "0";
     $("tiposStatus").textContent = "Nenhum";
     $("tempoStatus").textContent = "0 s";
+    $("iceConnStatus").textContent = "Não iniciado";
+    $("peerConnStatus").textContent = "Não iniciado";
+    $("remotoTempo").textContent = "Aguardando";
+    $("answerTempo").textContent = "Aguardando";
+    $("localTempo").textContent = "Aguardando";
+    $("iceTardio").textContent = "Aguardando";
+    registrosICE = [];
+    inicioICE = performance.now();
+    const geracao = ++geracaoICE;
+    registrarICE("Oferta Alexa recebida; diagnóstico iniciado", geracao);
 
     let total = 0;
     let ipv4 = 0;
@@ -324,6 +359,7 @@ audio {display:none}
         if (!evento.candidate) return;
 
         total++;
+        if (total === 1) registrarICE("Primeiro candidato ICE", geracao);
         $("totalStatus").textContent = String(total);
 
         if (enderecoIPv4(evento.candidate)) {
@@ -341,13 +377,22 @@ audio {display:none}
       };
 
       conexao.onicegatheringstatechange = () => {
-        $("iceStatus").textContent =
-          conexao.iceGatheringState;
+        if (geracao !== geracaoICE) return;
+        $("iceStatus").textContent = conexao.iceGatheringState;
+        registrarICE("Coleta ICE: " + conexao.iceGatheringState, geracao);
+        if (conexao.iceGatheringState === "complete") {
+          $("iceTardio").textContent = ((performance.now() - inicioICE)/1000).toFixed(2) + "s (concluído)";
+        }
       };
-
+      conexao.oniceconnectionstatechange = () => {
+        if (geracao !== geracaoICE) return;
+        $("iceConnStatus").textContent = conexao.iceConnectionState;
+        registrarICE("Conexão ICE: " + conexao.iceConnectionState, geracao);
+      };
       conexao.onconnectionstatechange = () => {
-        $("rtcStatus").textContent =
-          "Conexão: " + conexao.connectionState;
+        if (geracao !== geracaoICE) return;
+        $("peerConnStatus").textContent = conexao.connectionState;
+        registrarICE("Conexão Peer: " + conexao.connectionState, geracao);
       };
 
       conexao.ontrack = evento => {
@@ -368,6 +413,8 @@ audio {display:none}
         sdp:oferta
       });
 
+      $("remotoTempo").textContent = ((performance.now()-inicioICE)/1000).toFixed(3) + "s";
+      registrarICE("setRemoteDescription concluído", geracao);
       const trickle = conexao.canTrickleIceCandidates;
 
       $("trickleStatus").textContent =
@@ -376,7 +423,11 @@ audio {display:none}
         "Não informado";
 
       const resposta = await conexao.createAnswer();
+      $("answerTempo").textContent = ((performance.now()-inicioICE)/1000).toFixed(3) + "s";
+      registrarICE("createAnswer concluído", geracao);
       await conexao.setLocalDescription(resposta);
+      $("localTempo").textContent = ((performance.now()-inicioICE)/1000).toFixed(3) + "s";
+      registrarICE("setLocalDescription concluído", geracao);
 
       $("sdpStatus").textContent = "Gerada inicialmente";
 
@@ -388,14 +439,15 @@ audio {display:none}
         ((performance.now() - inicio) / 1000).toFixed(1);
 
       if (!completo) {
-        $("iceStatus").textContent =
-          "Incompleta após 5 s";
+        registrarICE("Limite de 5 segundos: gathering=" + conexao.iceGatheringState + ", iceConnection=" + conexao.iceConnectionState, geracao);
+        $("iceTardio").textContent = "Observando após 5 s";
+        // Preservamos o estado real da coleta no campo próprio.
+        // O listener continua ativo para detectar conclusão tardia.
 
         $("sdpStatus").textContent =
           "Parcial: " + incorporados + " candidatos";
 
-        $("rtcStatus").textContent =
-          "Aguardando correção da ponte";
+        $("rtcStatus").textContent = "Resposta não enviada (limite ICE)";
 
         mensagem(
           "ICE ainda coletando após " + segundos +
