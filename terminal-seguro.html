@@ -61,6 +61,7 @@ small{color:var(--gold)}
 <strong>Eventos, direções SDP e amostras de áudio</strong>
 <pre id="log">Aguardando oferta Alexa.</pre>
 </div>
+
 <button id="copiar" class="sec">Copiar diagnóstico Áudio 12</button>
 <audio id="audioRemoto" autoplay playsinline></audio>
 <small>SEBASTIÃO SYSTEMS • ÁUDIO 12</small>
@@ -95,13 +96,23 @@ function registrar(t,g=geracao){
 function resumoMidias(sdp){
   const secs=(sdp||'').split(/(?=^m=)/m).slice(1);
   const global=(sdp||'').split(/^m=/m)[0];
-  const globalDir=global.match(/^a=(sendrecv|sendonly|recvonly|inactive)$/m)?.[1]||'sendrecv (padrão)';
+
+  const globalDir=global.match(
+    /^a=(sendrecv|sendonly|recvonly|inactive)$/m
+  )?.[1]||'sendrecv (padrão)';
 
   return secs.map(sec=>{
-    const linhas=sec.split(/\r?\n);
+    const linhas=sec.split(/\r?\n/);
     const m=linhas[0].split(' ');
-    const dir=sec.match(/^a=(sendrecv|sendonly|recvonly|inactive)$/m)?.[1]||globalDir;
-    const mid=sec.match(/^a=mid:([^\r\n]+)/m)?.[1]||'não informado';
+
+    const dir=sec.match(
+      /^a=(sendrecv|sendonly|recvonly|inactive)$/m
+    )?.[1]||globalDir;
+
+    const mid=sec.match(
+      /^a=mid:([^\r\n]+)/m
+    )?.[1]||'não informado';
+
     const codecs=linhas
       .filter(x=>x.startsWith('a=rtpmap:'))
       .map(x=>x.replace(/^a=rtpmap:/,'').split(' ')[1])
@@ -119,9 +130,14 @@ function resumoMidias(sdp){
 }
 
 function fecharRTC(){
-  if(pc){pc.close();pc=null}
+  if(pc){
+    pc.close();
+    pc=null;
+  }
+
   const a=$('audioRemoto');
   a.srcObject=null;
+
   $('reproduzir').disabled=true;
   set('reproduzir','Ativar som do celular');
 }
@@ -144,7 +160,10 @@ const trackInfo=t=>t?
   `${t.readyState}; enabled=${t.enabled}; muted=${t.muted}`:
   'ausente';
 
-const safeNum=x=>Number.isFinite(Number(x))?Number(x):null;
+const safeNum=x=>
+  x===undefined||x===null?
+  null:
+  Number.isFinite(Number(x))?Number(x):null;
 
 function audioInfo(r){
   return {
@@ -163,17 +182,34 @@ async function amostraAudio(c,rotulo,g){
 
   try{
     const stats=await c.getStats();
-    const out=[],inc=[],sources=[];
+
+    const out=[];
+    const inc=[];
+    const sources=[];
 
     stats.forEach(r=>{
       const kind=r.kind||r.mediaType;
-      if(r.type==='outbound-rtp'&&kind==='audio'&&!r.isRemote){
+
+      if(
+        r.type==='outbound-rtp'&&
+        kind==='audio'&&
+        !r.isRemote
+      ){
         out.push(audioInfo(r));
       }
-      if(r.type==='inbound-rtp'&&kind==='audio'&&!r.isRemote){
+
+      if(
+        r.type==='inbound-rtp'&&
+        kind==='audio'&&
+        !r.isRemote
+      ){
         inc.push(audioInfo(r));
       }
-      if(r.type==='media-source'&&kind==='audio'){
+
+      if(
+        r.type==='media-source'&&
+        kind==='audio'
+      ){
         sources.push({
           nivel:safeNum(r.audioLevel),
           energia:safeNum(r.totalAudioEnergy),
@@ -182,48 +218,89 @@ async function amostraAudio(c,rotulo,g){
       }
     });
 
-    set('outRtp',out.length?
-      out.map(x=>`${x.pacotes} pacotes / ${x.bytes} bytes`).join(' • '):
-      'Sem estatísticas');
+    set(
+      'outRtp',
+      out.length?
+        out.map(x=>
+          `${x.pacotes} pacotes / ${x.bytes} bytes`
+        ).join(' • '):
+        'Sem estatísticas'
+    );
 
-    set('inRtp',inc.length?
-      inc.map(x=>`${x.pacotes} pacotes / ${x.bytes} bytes`).join(' • '):
-      'Sem estatísticas');
+    set(
+      'inRtp',
+      inc.length?
+        inc.map(x=>
+          `${x.pacotes} pacotes / ${x.bytes} bytes`
+        ).join(' • '):
+        'Sem estatísticas'
+    );
 
-    set('localTrack',trackInfo(mic?.getAudioTracks()[0]));
-    set('remoteTrack',trackInfo(c.getReceivers().find(r=>r.track?.kind==='audio')?.track));
+    set(
+      'localTrack',
+      trackInfo(mic?.getAudioTracks()[0])
+    );
+
+    set(
+      'remoteTrack',
+      trackInfo(
+        c.getReceivers().find(
+          r=>r.track?.kind==='audio'
+        )?.track
+      )
+    );
 
     const a=$('audioRemoto');
 
-    registrar(rotulo+' RTP '+JSON.stringify({
-      enviado:out,
-      recebido:inc,
-      fonteLocal:sources,
-      faixaLocal:$('localTrack').textContent,
-      faixaRemota:$('remoteTrack').textContent,
-      reproducao:{
-        paused:a.paused,
-        muted:a.muted,
-        volume:a.volume,
-        readyState:a.readyState,
-        currentTime:Math.round(a.currentTime*10)/10
-      }
-    }),g);
+    registrar(
+      rotulo+' RTP '+JSON.stringify({
+        enviado:out,
+        recebido:inc,
+        fonteLocal:sources,
+        faixaLocal:$('localTrack').textContent,
+        faixaRemota:$('remoteTrack').textContent,
+        reproducao:{
+          paused:a.paused,
+          muted:a.muted,
+          volume:a.volume,
+          readyState:a.readyState,
+          currentTime:Math.round(a.currentTime*10)/10
+        }
+      }),
+      g
+    );
   }catch(e){
-    registrar(rotulo+' estatísticas indisponíveis: '+e.name,g);
+    registrar(
+      rotulo+' estatísticas indisponíveis: '+e.name,
+      g
+    );
   }
 }
 
 $('copiar').onclick=async()=>{
   const ids=[
-    'amazonStatus','wsStatus','micStatus','rtcStatus',
-    'iceStatus','iceConnStatus','peerConnStatus','sdpStatus',
-    'localTrack','remoteTrack','playStatus','outRtp','inRtp'
+    'amazonStatus',
+    'wsStatus',
+    'micStatus',
+    'rtcStatus',
+    'iceStatus',
+    'iceConnStatus',
+    'peerConnStatus',
+    'sdpStatus',
+    'localTrack',
+    'remoteTrack',
+    'playStatus',
+    'outRtp',
+    'inRtp'
   ];
 
-  const txt='SEBASTIÃO PORTEIRO • ÁUDIO 12\n'+
-    ids.map(id=>id+': '+$(id).textContent).join('\n')+
-    '\nEventos:\n'+logs.join('\n');
+  const txt=
+    'SEBASTIÃO PORTEIRO • ÁUDIO 12\n'+
+    ids.map(id=>
+      id+': '+$(id).textContent
+    ).join('\n')+
+    '\nEventos:\n'+
+    logs.join('\n');
 
   try{
     await navigator.clipboard.writeText(txt);
@@ -237,13 +314,20 @@ $('microfone').onclick=async()=>{
   try{
     if(!mic){
       mic=await navigator.mediaDevices.getUserMedia({
-        audio:true,video:false
+        audio:true,
+        video:false
       });
     }
 
     set('micStatus','Preparado');
-    set('localTrack',trackInfo(mic.getAudioTracks()[0]));
+
+    set(
+      'localTrack',
+      trackInfo(mic.getAudioTracks()[0])
+    );
+
     $('microfone').disabled=true;
+
     mensagem('Microfone preparado.');
   }catch(e){
     mensagem('Microfone: '+e.message,true);
@@ -253,9 +337,16 @@ $('microfone').onclick=async()=>{
 $('reproduzir').onclick=async()=>{
   try{
     await $('audioRemoto').play();
-    set('playStatus','play() permitido; paused='+$('audioRemoto').paused);
+
+    set(
+      'playStatus',
+      'play() permitido; paused='+
+      $('audioRemoto').paused
+    );
+
     set('reproduzir','Som do celular ativado');
     $('reproduzir').disabled=true;
+
     registrar('Reprodução liberada por toque');
   }catch(e){
     set('playStatus','play() recusado: '+e.name);
@@ -271,19 +362,36 @@ async function esperarICE(c){
 
     const finish=v=>{
       if(done)return;
+
       done=true;
       clearTimeout(timer);
-      c.removeEventListener('icegatheringstatechange',check);
+
+      c.removeEventListener(
+        'icegatheringstatechange',
+        check
+      );
+
       resolve(v);
     };
 
     const check=()=>{
       set('iceStatus',c.iceGatheringState);
-      if(c.iceGatheringState==='complete')finish(true);
+
+      if(c.iceGatheringState==='complete'){
+        finish(true);
+      }
     };
 
-    const timer=setTimeout(()=>finish(false),5000);
-    c.addEventListener('icegatheringstatechange',check);
+    const timer=setTimeout(
+      ()=>finish(false),
+      5000
+    );
+
+    c.addEventListener(
+      'icegatheringstatechange',
+      check
+    );
+
     check();
   });
 }
@@ -292,6 +400,7 @@ async function oferta(d){
   fecharRTC();
 
   const sdp=d?.offer?.value;
+
   if(
     d?.offer?.format!=='SDP'||
     typeof sdp!=='string'||
@@ -305,37 +414,68 @@ async function oferta(d){
   const g=++geracao;
   inicio=performance.now();
   logs=[];
+
   registrar('Oferta Alexa recebida');
 
   [
-    'iceStatus','iceConnStatus','peerConnStatus',
-    'sdpStatus','remoteTrack','playStatus',
-    'outRtp','inRtp'
+    'iceStatus',
+    'iceConnStatus',
+    'peerConnStatus',
+    'sdpStatus',
+    'remoteTrack',
+    'playStatus',
+    'outRtp',
+    'inRtp'
   ].forEach(id=>set(id,'Iniciando'));
 
   try{
-    const c=new RTCPeerConnection({iceServers:[]});
+    const c=new RTCPeerConnection({
+      iceServers:[]
+    });
+
     pc=c;
+
     registrar('Peer criado sem STUN');
 
     c.onicegatheringstatechange=()=>{
       if(g===geracao){
-        set('iceStatus',c.iceGatheringState);
-        registrar('Coleta ICE: '+c.iceGatheringState,g);
+        set(
+          'iceStatus',
+          c.iceGatheringState
+        );
+
+        registrar(
+          'Coleta ICE: '+c.iceGatheringState,
+          g
+        );
       }
     };
 
     c.oniceconnectionstatechange=()=>{
       if(g===geracao){
-        set('iceConnStatus',c.iceConnectionState);
-        registrar('Conexão ICE: '+c.iceConnectionState,g);
+        set(
+          'iceConnStatus',
+          c.iceConnectionState
+        );
+
+        registrar(
+          'Conexão ICE: '+c.iceConnectionState,
+          g
+        );
       }
     };
 
     c.onconnectionstatechange=()=>{
       if(g===geracao){
-        set('peerConnStatus',c.connectionState);
-        registrar('Conexão Peer: '+c.connectionState,g);
+        set(
+          'peerConnStatus',
+          c.connectionState
+        );
+
+        registrar(
+          'Conexão Peer: '+c.connectionState,
+          g
+        );
       }
     };
 
@@ -344,42 +484,69 @@ async function oferta(d){
 
       registrar(
         'Faixa remota recebida: kind='+
-        e.track.kind+'; '+trackInfo(e.track),g
+        e.track.kind+'; '+trackInfo(e.track),
+        g
       );
 
-      // Somente áudio entra no reprodutor.
-      // A faixa de vídeo não pode substituí-lo.
+      // A faixa de vídeo não substitui o áudio.
       if(e.track.kind!=='audio'){
-        registrar('Vídeo ignorado pelo reprodutor de áudio',g);
+        registrar(
+          'Vídeo ignorado pelo reprodutor de áudio',
+          g
+        );
         return;
       }
 
       const a=$('audioRemoto');
+
       a.srcObject=new MediaStream([e.track]);
       a.muted=false;
       a.volume=1;
 
       $('reproduzir').disabled=false;
-      set('remoteTrack',trackInfo(e.track));
+
+      set(
+        'remoteTrack',
+        trackInfo(e.track)
+      );
 
       e.track.onunmute=()=>registrar(
-        'Faixa de áudio remota unmute',g
+        'Faixa de áudio remota unmute',
+        g
       );
+
       e.track.onmute=()=>registrar(
-        'Faixa de áudio remota mute',g
+        'Faixa de áudio remota mute',
+        g
       );
+
       e.track.onended=()=>registrar(
-        'Faixa de áudio remota ended',g
+        'Faixa de áudio remota ended',
+        g
       );
 
       a.play()
         .then(()=>{
-          set('playStatus','play() permitido');
-          registrar('Reprodução de áudio iniciada',g);
+          set(
+            'playStatus',
+            'play() permitido'
+          );
+
+          registrar(
+            'Reprodução de áudio iniciada',
+            g
+          );
         })
         .catch(err=>{
-          set('playStatus','play() recusado: '+err.name);
-          registrar('Reprodução recusada: '+err.name,g);
+          set(
+            'playStatus',
+            'play() recusado: '+err.name
+          );
+
+          registrar(
+            'Reprodução recusada: '+err.name,
+            g
+          );
         });
     };
 
@@ -391,26 +558,33 @@ async function oferta(d){
 
     registrar(
       'Faixa local: '+
-      trackInfo(mic?.getAudioTracks()[0]),g
+      trackInfo(mic?.getAudioTracks()[0]),
+      g
     );
 
-    // Diagnóstico das direções e codecs, sem SDP bruto.
     registrar(
       'OFERTA mídias: '+
-      JSON.stringify(resumoMidias(sdp)),g
+      JSON.stringify(resumoMidias(sdp)),
+      g
     );
 
     await c.setRemoteDescription({
-      type:'offer',sdp
+      type:'offer',
+      sdp
     });
+
     registrar('SDP remoto aplicado',g);
 
     const answer=await c.createAnswer();
+
     await c.setLocalDescription(answer);
 
     registrar(
       'RESPOSTA mídias: '+
-      JSON.stringify(resumoMidias(c.localDescription?.sdp||'')),g
+      JSON.stringify(
+        resumoMidias(c.localDescription?.sdp||'')
+      ),
+      g
     );
 
     registrar(
@@ -419,24 +593,39 @@ async function oferta(d){
         c.getTransceivers().map(t=>({
           tipo:t.receiver?.track?.kind,
           direcaoSolicitada:t.direction,
-          direcaoAtual:t.currentDirection||'ainda não definida'
+          direcaoAtual:
+            t.currentDirection||
+            'ainda não definida'
         }))
-      ),g
+      ),
+      g
     );
 
     registrar('SDP local criado',g);
 
     const completo=await esperarICE(c);
+
     if(g!==geracao)return;
 
     if(!completo){
-      set('rtcStatus','ICE não concluiu em 5 s');
-      mensagem('ICE incompleto: SDP não enviado.',true);
+      set(
+        'rtcStatus',
+        'ICE não concluiu em 5 s'
+      );
+
+      mensagem(
+        'ICE incompleto: SDP não enviado.',
+        true
+      );
+
       return;
     }
 
     const final=c.localDescription?.sdp||'';
-    const candidatos=(final.match(/^a=candidate:/gm)||[]).length;
+
+    const candidatos=(
+      final.match(/^a=candidate:/gm)||[]
+    ).length;
 
     if(!final.startsWith('v=0')||!candidatos){
       throw Error('SDP sem candidatos');
@@ -455,18 +644,32 @@ async function oferta(d){
       }
     }));
 
-    set('sdpStatus','Enviado: '+candidatos+' candidatos');
-    set('rtcStatus','Resposta enviada à AWS');
-
-    registrar(
-      'SDP enviado à AWS; candidatos='+candidatos,g
+    set(
+      'sdpStatus',
+      'Enviado: '+candidatos+' candidatos'
     );
 
-    mensagem('Resposta enviada. Medindo áudio RTP.');
+    set(
+      'rtcStatus',
+      'Resposta enviada à AWS'
+    );
+
+    registrar(
+      'SDP enviado à AWS; candidatos='+candidatos,
+      g
+    );
+
+    mensagem(
+      'Resposta enviada. Medindo áudio RTP.'
+    );
 
     [3000,8000,15000].forEach(ms=>
       setTimeout(
-        ()=>amostraAudio(c,(ms/1000)+'s',g),
+        ()=>amostraAudio(
+          c,
+          (ms/1000)+'s',
+          g
+        ),
         ms
       )
     );
@@ -474,8 +677,16 @@ async function oferta(d){
     if(g!==geracao)return;
 
     set('rtcStatus','Falha WebRTC');
-    registrar('Erro WebRTC: '+e.name,g);
-    mensagem('Erro: '+e.message,true);
+
+    registrar(
+      'Erro WebRTC: '+e.name,
+      g
+    );
+
+    mensagem(
+      'Erro: '+e.message,
+      true
+    );
 
     if(socket?.readyState===WebSocket.OPEN){
       socket.send(JSON.stringify({
@@ -496,6 +707,7 @@ function conectar(token){
 
   fecharSocket();
   fecharRTC();
+
   set('wsStatus','Conectando...');
 
   socket=new WebSocket(
@@ -504,7 +716,10 @@ function conectar(token){
 
   socket.onopen=()=>{
     set('wsStatus','Conectada');
-    mensagem('Terminal autenticado. Aguardando Alexa.');
+
+    mensagem(
+      'Terminal autenticado. Aguardando Alexa.'
+    );
 
     socket.send(JSON.stringify({
       action:'teste',
@@ -516,8 +731,12 @@ function conectar(token){
 
   socket.onmessage=e=>{
     let d;
-    try{d=JSON.parse(e.data)}
-    catch{return}
+
+    try{
+      d=JSON.parse(e.data);
+    }catch{
+      return;
+    }
 
     if(d.action==='webrtc_offer'){
       oferta(d);
@@ -532,7 +751,9 @@ function conectar(token){
 
   socket.onerror=()=>{
     set('wsStatus','Falha');
+
     mensagem('WebSocket recusado.',true);
+
     liberar();
   };
 
@@ -544,7 +765,9 @@ function conectar(token){
 
 async function solicitarCracha(accessToken){
   try{
-    mensagem('AWS verificando identidade Amazon...');
+    mensagem(
+      'AWS verificando identidade Amazon...'
+    );
 
     const r=await fetch(EMISSOR,{
       method:'POST',
@@ -560,7 +783,9 @@ async function solicitarCracha(accessToken){
     const d=await r.json();
 
     if(!r.ok){
-      throw Error(d.erro||'Emissor recusou login');
+      throw Error(
+        d.erro||'Emissor recusou login'
+      );
     }
 
     if(
@@ -568,14 +793,22 @@ async function solicitarCracha(accessToken){
       d.expiresIn!==300||
       d.terminalId!=='celular-teste'
     ){
-      throw Error('Resposta inesperada da AWS');
+      throw Error(
+        'Resposta inesperada da AWS'
+      );
     }
 
     validade=Date.now()+300000;
-    set('crachaStatus','Emitido: 5 min');
+
+    set(
+      'crachaStatus',
+      'Emitido: 5 min'
+    );
+
     conectar(d.token);
   }catch(e){
     set('crachaStatus','Falha');
+
     mensagem(e.message,true);
     liberar();
   }
@@ -583,12 +816,19 @@ async function solicitarCracha(accessToken){
 
 window.onAmazonLoginReady=()=>{
   try{
-    window.amazon.Login.setClientId(CLIENT_ID);
+    window.amazon.Login.setClientId(
+      CLIENT_ID
+    );
+
     amazonPronta=true;
     liberar();
+
     mensagem('Pronto para autenticar.');
   }catch{
-    mensagem('Falha ao inicializar Amazon.',true);
+    mensagem(
+      'Falha ao inicializar Amazon.',
+      true
+    );
   }
 };
 
@@ -596,12 +836,14 @@ $('entrar').onclick=()=>{
   if(!amazonPronta)return;
 
   $('entrar').disabled=true;
+
   fecharSocket();
   fecharRTC();
 
   set('amazonStatus','Autenticando');
   set('crachaStatus','Aguardando');
   set('wsStatus','Desconectada');
+
   mensagem('Aguardando login Amazon...');
 
   window.amazon.Login.authorize({
@@ -611,24 +853,34 @@ $('entrar').onclick=()=>{
     interactive:'always'
   },result=>{
     if(result.error||!result.code){
-      mensagem('Login Amazon não concluído.',true);
+      mensagem(
+        'Login Amazon não concluído.',
+        true
+      );
+
       liberar();
       return;
     }
 
     window.amazon.Login.retrieveToken(
-      result.code,t=>{
+      result.code,
+      t=>{
         if(
           t.error||
           !t.success||
           !t.access_token
         ){
-          mensagem('Falha no token Amazon.',true);
+          mensagem(
+            'Falha no token Amazon.',
+            true
+          );
+
           liberar();
           return;
         }
 
         set('amazonStatus','Autorizada');
+
         solicitarCracha(t.access_token);
       }
     );
@@ -636,17 +888,25 @@ $('entrar').onclick=()=>{
 };
 
 const sdk=document.createElement('script');
+
 sdk.async=true;
-sdk.src='https://assets.loginwithamazon.com/sdk/na/login1.js';
+
+sdk.src=
+  'https://assets.loginwithamazon.com/sdk/na/login1.js';
+
 sdk.onerror=()=>mensagem(
-  'Falha ao carregar Amazon.',true
+  'Falha ao carregar Amazon.',
+  true
 );
 
 $('amazon-root').appendChild(sdk);
 
 setTimeout(()=>{
   if(!amazonPronta){
-    mensagem('Amazon não inicializou.',true);
+    mensagem(
+      'Amazon não inicializou.',
+      true
+    );
   }
 },12000);
 
