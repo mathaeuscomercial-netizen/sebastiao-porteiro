@@ -4,94 +4,99 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Autenticação | Sebastião Porteiro™</title>
+
+<title>Sebastião Porteiro | Autenticação</title>
+
 <style>
-  * { box-sizing: border-box; }
+* { box-sizing: border-box; }
 
-  body {
-    margin: 0;
-    min-height: 100vh;
-    display: grid;
-    place-items: center;
-    background: #101e1a;
-    color: #f2ebda;
-    font-family: Georgia, serif;
-    padding: 24px;
-  }
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  background: #101e1a;
+  color: #f2ebda;
+  font-family: Georgia, serif;
+  padding: 24px;
+}
 
-  main {
-    width: 100%;
-    max-width: 420px;
-    padding: 38px 24px;
-    text-align: center;
-    background: #1b3028;
-    border: 1px solid #675b3f;
-    border-radius: 20px;
-  }
+main {
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  background: #1b3028;
+  border: 1px solid #675b3f;
+  border-radius: 20px;
+  padding: 38px 24px;
+}
 
-  .icone {
-    font-size: 46px;
-    color: #c7a66a;
-  }
+.icone {
+  color: #c7a66a;
+  font-size: 46px;
+}
 
-  h1 {
-    font-size: 29px;
-    font-weight: normal;
-  }
+h1 {
+  font-size: 29px;
+  font-weight: normal;
+}
 
-  p { line-height: 1.6; }
+p { line-height: 1.6; }
 
-  button {
-    width: 100%;
-    padding: 16px;
-    margin-top: 20px;
-    background: #c7a66a;
-    color: #101e1a;
-    border: 0;
-    border-radius: 10px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-  }
+button {
+  width: 100%;
+  padding: 16px;
+  margin-top: 20px;
+  border: 0;
+  border-radius: 10px;
+  background: #c7a66a;
+  color: #101e1a;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+}
 
-  button:disabled {
-    opacity: .6;
-    cursor: wait;
-  }
+button:disabled {
+  opacity: .6;
+  cursor: wait;
+}
 
-  #status {
-    margin-top: 24px;
-    overflow-wrap: anywhere;
-  }
+#status {
+  margin-top: 24px;
+  overflow-wrap: anywhere;
+}
 
-  .ok { color: #9fdbb1; }
-  .erro { color: #ffabab; }
+.ok { color: #9fdbb1; }
+.erro { color: #ffabab; }
 
-  .cartao {
-    margin-top: 24px;
-    padding: 18px;
-    border: 1px solid #c7a66a;
-    border-radius: 12px;
-    background: #101e1a;
-  }
+.cartao {
+  margin-top: 24px;
+  padding: 18px;
+  background: #101e1a;
+  border: 1px solid #c7a66a;
+  border-radius: 12px;
+}
 
-  .cartao strong {
-    display: block;
-    color: #9fdbb1;
-    font-size: 18px;
-  }
+.cartao strong {
+  color: #9fdbb1;
+  font-size: 18px;
+}
 
-  small { color: #c7bfae; }
+small { color: #c7bfae; }
 </style>
 </head>
+
 <body>
 
 <div id="amazon-root"></div>
 
 <main>
   <div class="icone">♜</div>
+
   <h1>Sebastião Porteiro™</h1>
+
   <p>Central de autenticação</p>
+
   <small>Masmorra-Sede™</small>
 
   <button id="entrar" disabled>
@@ -99,168 +104,232 @@
   </button>
 
   <div id="status" aria-live="polite">
-    Preparando autenticação.
+    Inicializando o sistema.
   </div>
 
   <div id="cartao" class="cartao" hidden>
     <strong>✓ Credencial emitida</strong>
+
     <p>Terminal: celular-teste</p>
+
     <small>Validade: 5 minutos</small>
   </div>
 </main>
 
 <script>
-const CLIENT_ID =
-  "amzn1.application-oa2-client.b48ae2009d2241679b0a2f8b3f09cb42";
+(function () {
+  "use strict";
 
-const EMISSOR =
-  "https://yfy6x3xbsn4ntldhfypaz5gkoa0jgsmy.lambda-url.us-east-1.on.aws/";
+  const CLIENT_ID =
+    "amzn1.application-oa2-client.b48ae2009d2241679b0a2f8b3f09cb42";
 
-const botao = document.getElementById("entrar");
-const status = document.getElementById("status");
-const cartao = document.getElementById("cartao");
+  const EMISSOR =
+    "https://yfy6x3xbsn4ntldhfypaz5gkoa0jgsmy.lambda-url.us-east-1.on.aws/";
 
-function mensagem(texto, classe = "") {
-  status.textContent = texto;
-  status.className = classe;
-}
+  const botao = document.getElementById("entrar");
+  const painel = document.getElementById("status");
+  const cartao = document.getElementById("cartao");
+  const raiz = document.getElementById("amazon-root");
 
-function finalizar() {
-  botao.disabled = false;
-  botao.textContent = "Autenticar novamente";
-}
+  let amazonPronta = false;
+  let carregamentoConcluido = false;
+  let temporizador;
 
-async function solicitarCracha(accessToken) {
-  mensagem("AWS verificando identidade Amazon...");
-
-  try {
-    const resposta = await fetch(EMISSOR, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        access_token: accessToken
-      }),
-      cache: "no-store"
-    });
-
-    const dados = await resposta.json();
-
-    if (!resposta.ok) {
-      mensagem(
-        "AWS recusou a solicitação (" +
-        resposta.status + "): " +
-        (dados.erro || "Falha desconhecida"),
-        "erro"
-      );
-      return;
-    }
-
-    if (
-      typeof dados.token !== "string" ||
-      dados.terminalId !== "celular-teste" ||
-      dados.expiresIn !== 300
-    ) {
-      mensagem(
-        "A AWS retornou uma resposta inesperada.",
-        "erro"
-      );
-      return;
-    }
-
-    // O crachá fica apenas na memória
-    // desta página experimental.
-    // Não é mostrado nem enviado ao WebSocket.
-    window.credencialTerminal = dados.token;
-
-    cartao.hidden = false;
-
-    mensagem(
-      "Conta autorizada! A AWS emitiu o " +
-      "crachá digital do Sebastião.",
-      "ok"
-    );
-
-  } catch (erro) {
-    mensagem(
-      "Não foi possível comunicar com a AWS. " +
-      "Verifique a conexão ou a configuração CORS.",
-      "erro"
-    );
-  } finally {
-    finalizar();
-  }
-}
-
-window.onAmazonLoginReady = function() {
-  amazon.Login.setClientId(CLIENT_ID);
-  botao.disabled = false;
-  botao.textContent = "Solicitar crachá digital";
-  mensagem("Pronto para autenticar.");
-};
-
-botao.addEventListener("click", function() {
-  if (!window.amazon?.Login) {
-    mensagem("Login Amazon indisponível.", "erro");
-    return;
+  function mensagem(texto, classe = "") {
+    painel.textContent = texto;
+    painel.className = classe;
   }
 
-  botao.disabled = true;
-  cartao.hidden = true;
-  window.credencialTerminal = null;
+  function liberarBotao() {
+    if (amazonPronta) return;
 
-  mensagem("Aguardando autorização Amazon...");
+    try {
+      if (!window.amazon?.Login) {
+        throw new Error("SDK indisponível");
+      }
 
-  amazon.Login.authorize(
-    {
-      scope: "profile:user_id",
-      pkce: true,
-      popup: true,
-      interactive: "always"
-    },
-    function(resultado) {
-      if (resultado.error || !resultado.code) {
+      window.amazon.Login.setClientId(CLIENT_ID);
+
+      amazonPronta = true;
+      clearTimeout(temporizador);
+
+      botao.disabled = false;
+      botao.textContent = "Solicitar crachá digital";
+
+      mensagem("Amazon conectada. Pronto para autenticar.", "ok");
+
+    } catch (erro) {
+      mensagem(
+        "Falha ao inicializar Amazon: " + erro.message,
+        "erro"
+      );
+    }
+  }
+
+  function finalizar() {
+    botao.disabled = false;
+    botao.textContent = "Solicitar novo crachá";
+  }
+
+  async function solicitarCracha(accessToken) {
+    mensagem("AWS verificando sua identidade Amazon...");
+
+    try {
+      const resposta = await fetch(EMISSOR, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          access_token: accessToken
+        }),
+        cache: "no-store"
+      });
+
+      const dados = await resposta.json();
+
+      if (!resposta.ok) {
         mensagem(
-          "Autorização Amazon não concluída.",
+          "AWS recusou a solicitação (" +
+          resposta.status + "): " +
+          (dados.erro || "Erro desconhecido"),
           "erro"
         );
-        finalizar();
         return;
       }
 
-      amazon.Login.retrieveToken(
-        resultado.code,
-        function(token) {
-          if (
-            token.error ||
-            !token.success ||
-            !token.access_token
-          ) {
-            mensagem(
-              "Não foi possível obter o token Amazon.",
-              "erro"
-            );
-            finalizar();
-            return;
-          }
+      if (
+        typeof dados.token !== "string" ||
+        dados.terminalId !== "celular-teste" ||
+        dados.expiresIn !== 300
+      ) {
+        mensagem(
+          "Resposta inesperada do emissor AWS.",
+          "erro"
+        );
+        return;
+      }
 
-          solicitarCracha(token.access_token);
-        }
+      // Guarda a credencial somente na memoria.
+      // Nao coloca tokens na tela ou em logs.
+      window.credencialTerminal = dados.token;
+
+      cartao.hidden = false;
+
+      mensagem(
+        "Conta autorizada! Crachá digital emitido.",
+        "ok"
       );
+
+    } catch (erro) {
+      mensagem(
+        "Falha na comunicação com a AWS: " +
+        erro.message,
+        "erro"
+      );
+    } finally {
+      finalizar();
     }
-  );
-};
+  }
 
-const script = document.createElement("script");
-script.src =
-  "https://assets.loginwithamazon.com/sdk/na/login1.js";
+  botao.addEventListener("click", function () {
+    if (!amazonPronta) {
+      mensagem("Amazon ainda não inicializada.", "erro");
+      return;
+    }
 
-script.onerror = function() {
-  mensagem("Falha ao carregar a Amazon.", "erro");
-};
+    botao.disabled = true;
+    cartao.hidden = true;
+    window.credencialTerminal = null;
 
-document.head.appendChild(script);
+    mensagem("Aguardando autorização Amazon...");
+
+    window.amazon.Login.authorize(
+      {
+        scope: "profile:user_id",
+        pkce: true,
+        popup: true,
+        interactive: "always"
+      },
+      function (resultado) {
+        if (resultado.error || !resultado.code) {
+          mensagem(
+            "Autorização Amazon não concluída: " +
+            (resultado.error || "sem código"),
+            "erro"
+          );
+          finalizar();
+          return;
+        }
+
+        window.amazon.Login.retrieveToken(
+          resultado.code,
+          function (token) {
+            if (
+              token.error ||
+              !token.success ||
+              !token.access_token
+            ) {
+              mensagem(
+                "Falha ao obter token Amazon: " +
+                (token.error || "resposta inválida"),
+                "erro"
+              );
+              finalizar();
+              return;
+            }
+
+            solicitarCracha(token.access_token);
+          }
+        );
+      }
+    );
+  });
+
+  // Callback recomendado pelo Login with Amazon.
+  window.onAmazonLoginReady = function () {
+    carregamentoConcluido = true;
+    liberarBotao();
+  };
+
+  // Diagnostico caso a Amazon nao responda.
+  temporizador = setTimeout(function () {
+    if (!amazonPronta) {
+      mensagem(
+        carregamentoConcluido
+          ? "SDK carregado, mas não inicializado."
+          : "A Amazon não respondeu ao carregamento do SDK.",
+        "erro"
+      );
+
+      botao.textContent = "Amazon indisponível";
+    }
+  }, 12000);
+
+  // Carregamento conforme a documentacao Amazon.
+  const script = document.createElement("script");
+
+  script.type = "text/javascript";
+  script.async = true;
+  script.id = "amazon-login-sdk";
+
+  script.src =
+    "https://assets.loginwithamazon.com/sdk/na/login1.js";
+
+  script.onerror = function () {
+    clearTimeout(temporizador);
+
+    mensagem(
+      "Erro ao carregar o SDK da Amazon.",
+      "erro"
+    );
+
+    botao.textContent = "Amazon indisponível";
+  };
+
+  raiz.appendChild(script);
+})();
 </script>
+
 </body>
 </html>
