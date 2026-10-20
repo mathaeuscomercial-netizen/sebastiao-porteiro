@@ -4,7 +4,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sebastião Porteiro | Áudio 13</title>
+<title>Sebastião Porteiro | Áudio 13 • Encerramento</title>
 <style>
 :root {
   color-scheme:dark;
@@ -100,8 +100,12 @@ pre {
 <h1>Sebastião Porteiro™</h1>
 <p>Laboratório 13 • RTP remoto, codecs e DTLS</p>
 
-<button id="entrar" disabled>Carregando Amazon...</button>
-<button id="microfone" class="sec">Preparar microfone</button>
+<button id="entrar" disabled>
+  Carregando Amazon...
+</button>
+<button id="microfone" class="sec">
+  Preparar microfone
+</button>
 <button id="reproduzir" class="sec" disabled>
   Ativar som do celular
 </button>
@@ -211,9 +215,10 @@ pre {
   let geracao = 0;
   let inicio = 0;
   let logs = [];
+  let sessaoAtual = null;
 
-  const set = (id, v) => {
-    $(id).textContent = String(v);
+  const set = (id, valor) => {
+    $(id).textContent = String(valor);
   };
 
   function mensagem(texto, erro = false) {
@@ -230,9 +235,7 @@ pre {
 
     logs.push('+' + dt + 's ' + texto);
 
-    if (logs.length > 200) {
-      logs.shift();
-    }
+    if (logs.length > 200) logs.shift();
 
     set('log', logs.join('\n'));
   }
@@ -242,8 +245,7 @@ pre {
       .split(/(?=^m=)/m)
       .slice(1);
 
-    const global = (sdp || '')
-      .split(/^m=/m)[0];
+    const global = (sdp || '').split(/^m=/m)[0];
 
     const globalDir = global.match(
       /^a=(sendrecv|sendonly|recvonly|inactive)$/m
@@ -286,6 +288,19 @@ pre {
 
     $('reproduzir').disabled = true;
     set('reproduzir', 'Ativar som do celular');
+  }
+
+  function liberarMicrofone() {
+    if (mic) {
+      for (const faixa of mic.getTracks()) {
+        faixa.stop();
+      }
+      mic = null;
+    }
+
+    $('microfone').disabled = false;
+    set('micStatus', 'Liberado');
+    set('localTrack', 'encerrada');
   }
 
   function fecharSocket() {
@@ -336,7 +351,8 @@ pre {
       energia: numero(item.totalAudioEnergy),
       amostras: numero(item.totalSamplesDuration),
       jitter: numero(item.jitter),
-      perdidos: numero(item.packetsLost)
+      perdidos: numero(item.packetsLost),
+      codecId: item.codecId || null
     };
   }
 
@@ -378,10 +394,7 @@ pre {
           item.type === 'outbound-rtp' &&
           !item.isRemote
         ) {
-          enviados.push({
-            ...rtpInfo(item),
-            codecId: item.codecId || null
-          });
+          enviados.push(rtpInfo(item));
 
           if (item.codecId) {
             codecIds.add(item.codecId);
@@ -393,10 +406,7 @@ pre {
           item.type === 'inbound-rtp' &&
           !item.isRemote
         ) {
-          recebidos.push({
-            ...rtpInfo(item),
-            codecId: item.codecId || null
-          });
+          recebidos.push(rtpInfo(item));
 
           if (item.codecId) {
             codecIds.add(item.codecId);
@@ -534,7 +544,6 @@ pre {
         }),
         g
       );
-
     } catch (erro) {
       registrar(
         rotulo +
@@ -599,7 +608,6 @@ pre {
 
       $('microfone').disabled = true;
       mensagem('Microfone preparado.');
-
     } catch (erro) {
       mensagem(
         'Microfone: ' + erro.message,
@@ -622,7 +630,6 @@ pre {
       $('reproduzir').disabled = true;
 
       registrar('Reprodução liberada por toque');
-
     } catch (erro) {
       set(
         'playStatus',
@@ -696,13 +703,15 @@ pre {
       dados?.offer?.format !== 'SDP' ||
       typeof sdp !== 'string' ||
       !sdp.startsWith('v=0') ||
-      typeof dados.sessionId !== 'string'
+      typeof dados.sessionId !== 'string' ||
+      !dados.sessionId
     ) {
       mensagem('Oferta inválida.', true);
       return;
     }
 
     const g = ++geracao;
+    sessaoAtual = dados.sessionId;
     inicio = performance.now();
     logs = [];
 
@@ -720,10 +729,7 @@ pre {
       'dtlsStatus'
     ].forEach(id => set(id, 'Iniciando'));
 
-    set(
-      'sessionStatus',
-      'Oferta recebida'
-    );
+    set('sessionStatus', 'Oferta recebida');
 
     try {
       const conexao = new RTCPeerConnection({
@@ -832,6 +838,8 @@ pre {
 
         audio.play()
           .then(() => {
+            if (g !== geracao) return;
+
             set(
               'playStatus',
               'play() permitido'
@@ -843,6 +851,8 @@ pre {
             );
           })
           .catch(erro => {
+            if (g !== geracao) return;
+
             set(
               'playStatus',
               'play() recusado: ' + erro.name
@@ -881,14 +891,20 @@ pre {
         sdp
       });
 
+      if (g !== geracao) return;
+
       registrar('SDP remoto aplicado', g);
 
       const resposta =
         await conexao.createAnswer();
 
+      if (g !== geracao) return;
+
       await conexao.setLocalDescription(
         resposta
       );
+
+      if (g !== geracao) return;
 
       registrar(
         'RESPOSTA mídias: ' +
@@ -1037,6 +1053,8 @@ pre {
 
     fecharSocket();
     fecharRTC();
+    sessaoAtual = null;
+    ++geracao;
 
     set('wsStatus', 'Conectando...');
 
@@ -1076,19 +1094,51 @@ pre {
       }
 
       if (
+        dados.action ===
+        'webrtc_session_disconnected'
+      ) {
+        if (
+          !sessaoAtual ||
+          dados.sessionId !== sessaoAtual
+        ) {
+          registrar(
+            'Aviso de encerramento de outra sessão ignorado'
+          );
+          return;
+        }
+
+        registrar(
+          'Alexa encerrou a sessão; liberando áudio local'
+        );
+
+        ++geracao;
+        sessaoAtual = null;
+
+        fecharRTC();
+        liberarMicrofone();
+
+        set('remoteTrack', 'encerrada');
+        set('rtcStatus', 'Chamada encerrada');
+        set('iceConnStatus', 'closed');
+        set('peerConnStatus', 'closed');
+        set('sessionStatus', 'Encerrada pela Alexa');
+        set('playStatus', 'Reprodução encerrada');
+
+        mensagem(
+          'Chamada encerrada. Central AWS continua conectada.'
+        );
+
+        return;
+      }
+
+      if (
         /disconnect|ended|terminate|close/i
           .test(String(dados.action || ''))
       ) {
-        set(
-          'sessionStatus',
-          'Aviso AWS: ' +
+        registrar(
+          'Aviso AWS não reconhecido: ' +
           String(dados.action).slice(0, 50)
         );
-
-        registrar(
-          'Aviso de encerramento recebido via WebSocket'
-        );
-
       } else {
         registrar(
           'Mensagem AWS: ' +
@@ -1116,7 +1166,10 @@ pre {
 
       registrar('WebSocket encerrado');
 
+      ++geracao;
+      sessaoAtual = null;
       fecharRTC();
+      liberarMicrofone();
     };
   }
 
@@ -1198,6 +1251,8 @@ pre {
 
     fecharSocket();
     fecharRTC();
+    sessaoAtual = null;
+    ++geracao;
 
     set('amazonStatus', 'Autenticando');
     set('crachaStatus', 'Aguardando');
