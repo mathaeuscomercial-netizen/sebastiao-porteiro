@@ -4,91 +4,91 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Sebastião Porteiro | Áudio 13 • Encerramento</title>
+<title>Sebastião Porteiro | Áudio 14</title>
 <style>
 :root {
-  color-scheme:dark;
-  --bg:#101e1a;
-  --panel:#1b3028;
-  --gold:#c7a66a;
-  --fg:#f2ebda;
+  color-scheme: dark;
+  --bg: #101e1a;
+  --panel: #1b3028;
+  --gold: #c7a66a;
+  --fg: #f2ebda;
 }
-* { box-sizing:border-box; }
+* { box-sizing: border-box; }
 body {
-  margin:0;
-  padding:22px;
-  background:var(--bg);
-  color:var(--fg);
-  font-family:Georgia,serif;
+  margin: 0;
+  padding: 22px;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: Georgia,serif;
 }
 main {
-  max-width:520px;
-  margin:auto;
-  padding:28px 20px;
-  text-align:center;
-  border:1px solid #756442;
-  border-radius:24px;
-  background:var(--panel);
+  max-width: 520px;
+  margin: auto;
+  padding: 28px 20px;
+  text-align: center;
+  border: 1px solid #756442;
+  border-radius: 24px;
+  background: var(--panel);
 }
-h1 { font-weight:normal; }
-.marca,small { color:var(--gold); }
-.marca { letter-spacing:3px; }
+h1 { font-weight: normal; }
+.marca,small { color: var(--gold); }
+.marca { letter-spacing: 3px; }
 button {
-  display:block;
-  width:100%;
-  margin:12px 0;
-  padding:15px;
-  border:0;
-  border-radius:12px;
-  background:var(--gold);
-  color:var(--bg);
-  font-size:16px;
-  font-weight:bold;
-  cursor:pointer;
+  display: block;
+  width: 100%;
+  margin: 12px 0;
+  padding: 15px;
+  border: 0;
+  border-radius: 12px;
+  background: var(--gold);
+  color: var(--bg);
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
 }
 button.sec {
-  background:transparent;
-  color:var(--gold);
-  border:1px solid var(--gold);
+  background: transparent;
+  color: var(--gold);
+  border: 1px solid var(--gold);
 }
 button:disabled {
-  opacity:.5;
-  cursor:default;
+  opacity: .5;
+  cursor: default;
 }
 .quadro {
-  background:var(--bg);
-  border:1px solid #536454;
-  border-radius:14px;
-  padding:14px;
-  margin:18px 0;
+  background: var(--bg);
+  border: 1px solid #536454;
+  border-radius: 14px;
+  padding: 14px;
+  margin: 18px 0;
 }
 .linha {
-  display:flex;
-  justify-content:space-between;
-  gap:12px;
-  border-bottom:1px solid #34483c;
-  padding:9px 0;
-  text-align:left;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid #34483c;
+  padding: 9px 0;
+  text-align: left;
 }
-.linha:last-child { border:0; }
+.linha:last-child { border: 0; }
 .valor {
-  color:var(--gold);
-  text-align:right;
-  overflow-wrap:anywhere;
+  color: var(--gold);
+  text-align: right;
+  overflow-wrap: anywhere;
 }
 #status {
-  margin:20px 0;
-  line-height:1.6;
+  margin: 20px 0;
+  line-height: 1.6;
 }
-.ok { color:#9fdbb1; }
-.erro { color:#ffb1ab; }
+.ok { color: #9fdbb1; }
+.erro { color: #ffb1ab; }
 pre {
-  white-space:pre-wrap;
-  overflow-wrap:anywhere;
-  text-align:left;
-  font:12px/1.6 ui-monospace,monospace;
-  max-height:420px;
-  overflow:auto;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  text-align: left;
+  font: 12px/1.6 ui-monospace,monospace;
+  max-height: 420px;
+  overflow: auto;
 }
 </style>
 </head>
@@ -98,7 +98,7 @@ pre {
 <div style="font-size:46px">🏰</div>
 <p class="marca">MASMORRA-SEDE</p>
 <h1>Sebastião Porteiro™</h1>
-<p>Laboratório 13 • RTP remoto, codecs e DTLS</p>
+<p>Laboratório 14 • Aviso de desligamento</p>
 
 <button id="entrar" disabled>
   Carregando Amazon...
@@ -108,6 +108,9 @@ pre {
 </button>
 <button id="reproduzir" class="sec" disabled>
   Ativar som do celular
+</button>
+<button id="simular" class="sec" disabled>
+  Simular porteiro desligando
 </button>
 
 <div id="status">Inicializando...</div>
@@ -180,16 +183,16 @@ pre {
 </div>
 
 <div class="quadro">
-  <strong>Registro seguro Áudio 13</strong>
+  <strong>Registro seguro Áudio 14</strong>
   <pre id="log">Aguardando oferta Alexa.</pre>
 </div>
 
 <button id="copiar" class="sec">
-  Copiar diagnóstico Áudio 13
+  Copiar diagnóstico Áudio 14
 </button>
 
 <audio id="audioRemoto" autoplay playsinline></audio>
-<small>SEBASTIÃO SYSTEMS • ÁUDIO 13</small>
+<small>SEBASTIÃO SYSTEMS • ÁUDIO 14</small>
 </main>
 
 <script>
@@ -216,10 +219,12 @@ pre {
   let inicio = 0;
   let logs = [];
   let sessaoAtual = null;
+  let encerrando = false;
+  let audioAviso = null;
 
-  const set = (id, valor) => {
+  function set(id, valor) {
     $(id).textContent = String(valor);
-  };
+  }
 
   function mensagem(texto, erro = false) {
     set('status', texto);
@@ -276,10 +281,30 @@ pre {
     });
   }
 
+  async function limparAudioAviso() {
+    if (!audioAviso) return;
+
+    const antigo = audioAviso;
+    audioAviso = null;
+
+    for (const oscilador of antigo.osciladores) {
+      try { oscilador.stop(); } catch {}
+    }
+
+    for (const faixa of antigo.destino.stream.getTracks()) {
+      faixa.stop();
+    }
+
+    try { await antigo.contexto.close(); } catch {}
+  }
+
   function fecharRTC() {
+    $('simular').disabled = true;
+
     if (pc) {
-      pc.close();
+      const antiga = pc;
       pc = null;
+      antiga.close();
     }
 
     const audio = $('audioRemoto');
@@ -303,13 +328,34 @@ pre {
     set('localTrack', 'encerrada');
   }
 
+  function finalizarLocal(motivo) {
+    ++geracao;
+    sessaoAtual = null;
+    encerrando = false;
+
+    fecharRTC();
+    liberarMicrofone();
+    void limparAudioAviso();
+
+    set('remoteTrack', 'encerrada');
+    set('rtcStatus', 'Chamada encerrada');
+    set('iceConnStatus', 'closed');
+    set('peerConnStatus', 'closed');
+    set('playStatus', 'Reprodução encerrada');
+    set('sessionStatus', motivo);
+
+    mensagem(
+      'Comunicação encerrada. Central AWS continua conectada.'
+    );
+  }
+
   function fecharSocket() {
-    if (socket) {
-      const antigo = socket;
-      socket = null;
-      antigo.onclose = null;
-      antigo.close();
-    }
+    if (!socket) return;
+
+    const antigo = socket;
+    socket = null;
+    antigo.onclose = null;
+    antigo.close();
   }
 
   function liberar() {
@@ -370,12 +416,12 @@ pre {
     if (
       g !== geracao ||
       conexao.signalingState === 'closed'
-    ) {
-      return;
-    }
+    ) return;
 
     try {
       const stats = await conexao.getStats();
+
+      if (g !== geracao) return;
 
       const enviados = [];
       const recebidos = [];
@@ -386,8 +432,7 @@ pre {
       const codecIds = new Set();
 
       stats.forEach(item => {
-        const tipoMidia =
-          item.kind || item.mediaType;
+        const tipoMidia = item.kind || item.mediaType;
 
         if (
           tipoMidia === 'audio' &&
@@ -395,10 +440,7 @@ pre {
           !item.isRemote
         ) {
           enviados.push(rtpInfo(item));
-
-          if (item.codecId) {
-            codecIds.add(item.codecId);
-          }
+          if (item.codecId) codecIds.add(item.codecId);
         }
 
         if (
@@ -407,10 +449,7 @@ pre {
           !item.isRemote
         ) {
           recebidos.push(rtpInfo(item));
-
-          if (item.codecId) {
-            codecIds.add(item.codecId);
-          }
+          if (item.codecId) codecIds.add(item.codecId);
         }
 
         if (
@@ -420,10 +459,8 @@ pre {
           remotoEnviados.push({
             pacotes: numero(item.packetsSent),
             bytes: numero(item.bytesSent),
-            remoteTimestamp:
-              numero(item.remoteTimestamp),
-            roundTripTime:
-              numero(item.roundTripTime),
+            remoteTimestamp: numero(item.remoteTimestamp),
+            roundTripTime: numero(item.roundTripTime),
             reportsSent: numero(item.reportsSent)
           });
         }
@@ -433,10 +470,8 @@ pre {
           item.type === 'remote-inbound-rtp'
         ) {
           remotoRecebidos.push({
-            pacotesPerdidos:
-              numero(item.packetsLost),
-            roundTripTime:
-              numero(item.roundTripTime),
+            pacotesPerdidos: numero(item.packetsLost),
+            roundTripTime: numero(item.roundTripTime),
             jitter: numero(item.jitter)
           });
         }
@@ -448,8 +483,7 @@ pre {
           fontes.push({
             nivel: numero(item.audioLevel),
             energia: numero(item.totalAudioEnergy),
-            amostras:
-              numero(item.totalSamplesDuration)
+            amostras: numero(item.totalSamplesDuration)
           });
         }
 
@@ -477,11 +511,12 @@ pre {
         }
       }
 
-      const dtls = transportes
-        .map(t => t.dtlsState || 'não informado')
-        .join(', ') || 'sem dados';
-
-      set('dtlsStatus', dtls);
+      set(
+        'dtlsStatus',
+        transportes
+          .map(t => t.dtlsState || 'não informado')
+          .join(', ') || 'sem dados'
+      );
 
       set(
         'outRtp',
@@ -529,10 +564,8 @@ pre {
           codecs,
           transportes,
           fonteLocal: fontes,
-          faixaLocal:
-            $('localTrack').textContent,
-          faixaRemota:
-            $('remoteTrack').textContent,
+          faixaLocal: $('localTrack').textContent,
+          faixaRemota: $('remoteTrack').textContent,
           reproducao: {
             paused: audio.paused,
             muted: audio.muted,
@@ -574,7 +607,7 @@ pre {
     ];
 
     const texto =
-      'SEBASTIÃO PORTEIRO • ÁUDIO 13\n' +
+      'SEBASTIÃO PORTEIRO • ÁUDIO 14\n' +
       campos.map(id =>
         id + ': ' + $(id).textContent
       ).join('\n') +
@@ -583,7 +616,7 @@ pre {
 
     try {
       await navigator.clipboard.writeText(texto);
-      mensagem('Diagnóstico Áudio 13 copiado.');
+      mensagem('Diagnóstico Áudio 14 copiado.');
     } catch {
       prompt('Copie o relatório:', texto);
     }
@@ -600,7 +633,6 @@ pre {
       }
 
       set('micStatus', 'Preparado');
-
       set(
         'localTrack',
         trackInfo(mic.getAudioTracks()[0])
@@ -645,9 +677,7 @@ pre {
   async function esperarICE(conexao) {
     if (
       conexao.iceGatheringState === 'complete'
-    ) {
-      return true;
-    }
+    ) return true;
 
     return new Promise(resolve => {
       let encerrado = false;
@@ -696,6 +726,7 @@ pre {
 
   async function receberOferta(dados) {
     fecharRTC();
+    void limparAudioAviso();
 
     const sdp = dados?.offer?.value;
 
@@ -712,6 +743,7 @@ pre {
 
     const g = ++geracao;
     sessaoAtual = dados.sessionId;
+    encerrando = false;
     inicio = performance.now();
     logs = [];
 
@@ -737,7 +769,6 @@ pre {
       });
 
       pc = conexao;
-
       registrar('Peer criado sem STUN');
 
       conexao.onicegatheringstatechange = () => {
@@ -777,6 +808,20 @@ pre {
           'peerConnStatus',
           conexao.connectionState
         );
+
+        if (
+          conexao.connectionState === 'connected' &&
+          !encerrando
+        ) {
+          $('simular').disabled = false;
+        }
+
+        if (
+          ['disconnected','failed','closed']
+            .includes(conexao.connectionState)
+        ) {
+          $('simular').disabled = true;
+        }
 
         registrar(
           'Conexão Peer: ' +
@@ -840,15 +885,8 @@ pre {
           .then(() => {
             if (g !== geracao) return;
 
-            set(
-              'playStatus',
-              'play() permitido'
-            );
-
-            registrar(
-              'Reprodução iniciada',
-              g
-            );
+            set('playStatus', 'play() permitido');
+            registrar('Reprodução iniciada', g);
           })
           .catch(erro => {
             if (g !== geracao) return;
@@ -859,17 +897,14 @@ pre {
             );
 
             registrar(
-              'Reprodução recusada: ' +
-              erro.name,
+              'Reprodução recusada: ' + erro.name,
               g
             );
           });
       };
 
       if (mic) {
-        for (
-          const track of mic.getAudioTracks()
-        ) {
+        for (const track of mic.getAudioTracks()) {
           conexao.addTrack(track, mic);
         }
       }
@@ -1041,6 +1076,196 @@ pre {
     }
   }
 
+  async function simularDesligamento() {
+    if (
+      encerrando ||
+      !sessaoAtual ||
+      !pc ||
+      pc.connectionState !== 'connected'
+    ) {
+      mensagem(
+        'Não há chamada conectada para simular.',
+        true
+      );
+      return;
+    }
+
+    const g = geracao;
+    const conexao = pc;
+    const sessao = sessaoAtual;
+
+    const sender = conexao.getSenders().find(
+      s => s.track?.kind === 'audio'
+    );
+
+    if (!sender) {
+      mensagem(
+        'A chamada não possui faixa de áudio local.',
+        true
+      );
+      return;
+    }
+
+    encerrando = true;
+    $('simular').disabled = true;
+
+    set(
+      'sessionStatus',
+      'Porteiro desligando: enviando aviso sonoro'
+    );
+
+    registrar('Simulação de desligamento iniciada');
+
+    mensagem('Enviando três bipes à Echo...');
+
+    try {
+      const contexto = new AudioContext();
+
+      const destino =
+        contexto.createMediaStreamDestination();
+
+      const osciladores = [];
+      audioAviso = {
+        contexto,
+        destino,
+        osciladores
+      };
+
+      await contexto.resume();
+
+      if (
+        g !== geracao ||
+        sessao !== sessaoAtual ||
+        conexao !== pc
+      ) return;
+
+      const t = contexto.currentTime + 0.12;
+
+      // Três bipes suaves:
+      // 0,20 s de som, separados por 0,25 s.
+      for (let i = 0; i < 3; i++) {
+        const oscilador =
+          contexto.createOscillator();
+
+        const volume =
+          contexto.createGain();
+
+        const comeco = t + i * 0.45;
+        const fim = comeco + 0.20;
+
+        oscilador.type = 'sine';
+        oscilador.frequency.value = 660;
+
+        volume.gain.setValueAtTime(
+          0,
+          comeco
+        );
+
+        volume.gain.linearRampToValueAtTime(
+          0.12,
+          comeco + 0.025
+        );
+
+        volume.gain.setValueAtTime(
+          0.12,
+          fim - 0.025
+        );
+
+        volume.gain.linearRampToValueAtTime(
+          0,
+          fim
+        );
+
+        oscilador.connect(volume);
+        volume.connect(destino);
+
+        oscilador.start(comeco);
+        oscilador.stop(fim + 0.02);
+
+        osciladores.push(oscilador);
+      }
+
+      const faixaAviso =
+        destino.stream.getAudioTracks()[0];
+
+      // Troca temporariamente o áudio enviado
+      // sem renegociar SDP ou alterar a Lambda.
+      await sender.replaceTrack(faixaAviso);
+
+      if (
+        g !== geracao ||
+        sessao !== sessaoAtual ||
+        conexao !== pc
+      ) return;
+
+      registrar(
+        'Faixa de aviso sonoro enviada pelo WebRTC',
+        g
+      );
+
+      // Mantém o canal aberto até os bipes
+      // serem transmitidos e reproduzidos.
+      await new Promise(resolve =>
+        setTimeout(resolve, 2100)
+      );
+
+      if (
+        g !== geracao ||
+        sessao !== sessaoAtual ||
+        conexao !== pc
+      ) return;
+
+      registrar(
+        'Aviso concluído; encerrando terminal',
+        g
+      );
+
+      finalizarLocal(
+        'Porteiro desligou; encerrar pela Alexa'
+      );
+
+    } catch (erro) {
+      if (g !== geracao) return;
+
+      registrar(
+        'Falha no aviso: ' + erro.name,
+        g
+      );
+
+      mensagem(
+        'Não foi possível transmitir o aviso: ' +
+        erro.message,
+        true
+      );
+
+      // Se ainda existir a chamada, tenta
+      // restaurar a faixa original do microfone.
+      try {
+        if (
+          pc === conexao &&
+          mic?.getAudioTracks()[0]
+        ) {
+          await sender.replaceTrack(
+            mic.getAudioTracks()[0]
+          );
+        }
+      } catch {}
+
+      await limparAudioAviso();
+
+      encerrando = false;
+
+      if (
+        pc === conexao &&
+        pc.connectionState === 'connected'
+      ) {
+        $('simular').disabled = false;
+      }
+    }
+  }
+
+  $('simular').onclick = simularDesligamento;
+
   function conectar(token) {
     if (
       !token ||
@@ -1053,7 +1278,10 @@ pre {
 
     fecharSocket();
     fecharRTC();
+    void limparAudioAviso();
+
     sessaoAtual = null;
+    encerrando = false;
     ++geracao;
 
     set('wsStatus', 'Conectando...');
@@ -1102,7 +1330,7 @@ pre {
           dados.sessionId !== sessaoAtual
         ) {
           registrar(
-            'Aviso de encerramento de outra sessão ignorado'
+            'Aviso de outra sessão ignorado'
           );
           return;
         }
@@ -1111,23 +1339,7 @@ pre {
           'Alexa encerrou a sessão; liberando áudio local'
         );
 
-        ++geracao;
-        sessaoAtual = null;
-
-        fecharRTC();
-        liberarMicrofone();
-
-        set('remoteTrack', 'encerrada');
-        set('rtcStatus', 'Chamada encerrada');
-        set('iceConnStatus', 'closed');
-        set('peerConnStatus', 'closed');
-        set('sessionStatus', 'Encerrada pela Alexa');
-        set('playStatus', 'Reprodução encerrada');
-
-        mensagem(
-          'Chamada encerrada. Central AWS continua conectada.'
-        );
-
+        finalizarLocal('Encerrada pela Alexa');
         return;
       }
 
@@ -1168,8 +1380,11 @@ pre {
 
       ++geracao;
       sessaoAtual = null;
+      encerrando = false;
+
       fecharRTC();
       liberarMicrofone();
+      void limparAudioAviso();
     };
   }
 
@@ -1251,7 +1466,10 @@ pre {
 
     fecharSocket();
     fecharRTC();
+    void limparAudioAviso();
+
     sessaoAtual = null;
+    encerrando = false;
     ++geracao;
 
     set('amazonStatus', 'Autenticando');
